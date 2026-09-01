@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSurvey • Student Details & Feedback Portal</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#EEF2FF',
+                            100: '#E0E7FF',
+                            500: '#6366F1',
+                            600: '#4F46E5',
+                            700: '#4338CA',
+                            800: '#3730A3',
+                            900: '#312E81'
+                        },
+                        gray: {
+                            750: '#1e2433',
+                            850: '#141a28'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js CDN for Admin Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- SheetJS (xlsx) for One-Click Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200 antialiased">
+
+    <!-- ============================================================== -->
+    <!-- 1. TOP NAVBAR -->
+    <!-- ============================================================== -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-gray-850/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand / Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                        <i class="fas fa-graduation-cap text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
+                                EduSurvey
+                            </span>
+                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                                Free Lifetime
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 hidden sm:block">Student Information & Feedback System</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="flex items-center gap-1 sm:gap-2">
+                    <button id="nav-survey-btn" class="px-3.5 py-2 text-sm font-semibold rounded-lg border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 transition-all flex items-center gap-2">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Survey Form</span>
+                    </button>
+                    <button id="nav-admin-btn" class="px-3.5 py-2 text-sm font-semibold rounded-lg border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Admin Dashboard</span>
+                    </button>
+                </nav>
+
+                <!-- Actions / Controls -->
+                <div class="flex items-center gap-2">
+                    <button id="nav-settings-btn" title="Cloud & Database Settings" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button id="theme-toggle-btn" title="Toggle Dark/Light Mode" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <i id="theme-moon-icon" class="fas fa-moon"></i>
+                        <i id="theme-sun-icon" class="fas fa-sun hidden text-amber-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- 2. TOAST NOTIFICATION CONTAINER -->
+    <!-- ============================================================== -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- ============================================================== -->
+    <!-- 3. MAIN CONTENT VIEWS -->
+    <!-- ============================================================== -->
+    <main class="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+
+        <!-- ============================================================== -->
+        <!-- 3A. STUDENT SURVEY VIEW -->
+        <!-- ============================================================== -->
+        <section id="survey-view" class="space-y-8 max-w-3xl mx-auto">
+            
+            <!-- Survey Banner Header -->
+            <div class="text-center space-y-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60">
+                    <i class="fas fa-clock text-[10px]"></i> Estimated time: ~2 minutes
+                </span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+                    Student Details & Experience Survey
+                </h1>
+                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+                    Please take a moment to provide your academic information, learning feedback, and career goals. Your response helps improve campus resources!
+                </p>
+            </div>
+
+            <!-- Survey Form Container -->
+            <div id="survey-form-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-gray-700 overflow-hidden transition-all">
+                
+                <!-- Wizard Step Indicators -->
+                <div class="p-6 bg-gray-50/80 dark:bg-gray-850/50 border-b border-gray-200 dark:border-gray-700/80">
+                    <div class="flex items-center justify-between relative max-w-md mx-auto">
+                        <!-- Step 1 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-1" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100 dark:ring-indigo-900">1</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Personal</span>
+                        </div>
+                        <div id="step-line-1" class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 -mx-2 transition-all"></div>
+                        
+                        <!-- Step 2 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-2" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">2</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Academic</span>
+                        </div>
+                        <div id="step-line-2" class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 -mx-2 transition-all"></div>
+                        
+                        <!-- Step 3 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-3" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">3</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Feedback</span>
+                        </div>
+                        <div id="step-line-3" class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 -mx-2 transition-all"></div>
+                        
+                        <!-- Step 4 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-4" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">4</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Submit</span>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <p id="form-progress-text" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                            Step 1: Personal & Contact Information
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Main Form Form Element -->
+                <form id="survey-form" class="p-6 sm:p-8 space-y-6" novalidate>
+                    
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 1: PERSONAL DETAILS -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-1-content" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <!-- Full Name -->
+                            <div class="sm:col-span-2">
+                                <label for="field-fullName" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Full Name <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" id="field-fullName" placeholder="e.g. Aarav Sharma" required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Roll Number -->
+                            <div>
+                                <label for="field-rollNo" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Student ID / Roll Number <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-id-card"></i>
+                                    </span>
+                                    <input type="text" id="field-rollNo" placeholder="e.g. CS23B045" required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm uppercase">
+                                </div>
+                            </div>
+
+                            <!-- Email Address -->
+                            <div>
+                                <label for="field-email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" id="field-email" placeholder="student@example.edu" required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div>
+                                <label for="field-phone" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Mobile / WhatsApp Number
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="tel" id="field-phone" placeholder="+91 98765 43210"
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Gender -->
+                            <div>
+                                <label for="field-gender" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Gender
+                                </label>
+                                <select id="field-gender"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="Not Specified">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Non-Binary / Other">Non-Binary / Other</option>
+                                    <option value="Prefer Not to Say">Prefer Not to Say</option>
+                                </select>
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="sm:col-span-2">
+                                <label for="field-dob" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Date of Birth (Optional)
+                                </label>
+                                <input type="date" id="field-dob"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Step 1 Controls -->
+                        <div class="pt-4 flex justify-end">
+                            <button type="button" id="step1-next-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                                <span>Continue to Academic Profile</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 2: ACADEMIC PROFILE -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-2-content" class="space-y-5 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <!-- Degree Program -->
+                            <div>
+                                <label for="field-degree" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Degree / Program <span class="text-red-500">*</span>
+                                </label>
+                                <select id="field-degree" required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="B.Tech">B.Tech / B.E (Engineering)</option>
+                                    <option value="B.Sc">B.Sc (Science / CS / IT)</option>
+                                    <option value="BCA">BCA (Computer Applications)</option>
+                                    <option value="B.Com / BBA">B.Com / BBA (Commerce & Business)</option>
+                                    <option value="M.Tech">M.Tech / M.E</option>
+                                    <option value="MBA">MBA (Management)</option>
+                                    <option value="MCA">MCA</option>
+                                    <option value="Ph.D / Research">Ph.D / Research</option>
+                                    <option value="Other">Other Diploma / Degree</option>
+                                </select>
+                            </div>
+
+                            <!-- Department / Major -->
+                            <div>
+                                <label for="field-department" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Department / Branch <span class="text-red-500">*</span>
+                                </label>
+                                <select id="field-department" required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics & Communication">Electronics & Communication</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Business & Management">Business & Management</option>
+                                    <option value="Commerce & Accounting">Commerce & Accounting</option>
+                                    <option value="Arts & Humanities">Arts & Humanities</option>
+                                    <option value="Applied Sciences">Applied Sciences</option>
+                                </select>
+                            </div>
+
+                            <!-- Year of Study -->
+                            <div>
+                                <label for="field-year" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Academic Year <span class="text-red-500">*</span>
+                                </label>
+                                <select id="field-year" required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="1st Year">1st Year (Freshman)</option>
+                                    <option value="2nd Year">2nd Year (Sophomore)</option>
+                                    <option value="3rd Year" selected>3rd Year (Junior)</option>
+                                    <option value="4th Year">4th Year (Senior)</option>
+                                    <option value="Post-Graduate">Post-Graduate / Final Year</option>
+                                </select>
+                            </div>
+
+                            <!-- Semester -->
+                            <div>
+                                <label for="field-semester" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Current Semester
+                                </label>
+                                <select id="field-semester"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="Semester 1">Semester 1</option>
+                                    <option value="Semester 2">Semester 2</option>
+                                    <option value="Semester 3">Semester 3</option>
+                                    <option value="Semester 4">Semester 4</option>
+                                    <option value="Semester 5" selected>Semester 5</option>
+                                    <option value="Semester 6">Semester 6</option>
+                                    <option value="Semester 7">Semester 7</option>
+                                    <option value="Semester 8">Semester 8</option>
+                                </select>
+                            </div>
+
+                            <!-- Section -->
+                            <div>
+                                <label for="field-section" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Class Section / Batch
+                                </label>
+                                <input type="text" id="field-section" placeholder="e.g. A or B1"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm uppercase">
+                            </div>
+
+                            <!-- CGPA / Percentage -->
+                            <div>
+                                <label for="field-cgpa" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Current CGPA (or %)
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-chart-line"></i>
+                                    </span>
+                                    <input type="text" id="field-cgpa" placeholder="e.g. 8.75 or 85%"
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 Controls -->
+                        <div class="pt-4 flex items-center justify-between">
+                            <button type="button" id="step2-prev-btn" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Back</span>
+                            </button>
+                            <button type="button" id="step2-next-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                                <span>Continue to Feedback</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 3: EXPERIENCE & FEEDBACK -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-3-content" class="space-y-6 hidden">
+                        
+                        <!-- Star Rating 1: Course Curriculum -->
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-850/50 border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-bold text-gray-900 dark:text-white mb-1">
+                                1. Course Curriculum & Faculty Quality Satisfaction <span class="text-red-500">*</span>
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2.5">How satisfied are you with the relevance, teaching style, and practical lab depth?</p>
+                            <div class="flex items-center gap-4">
+                                <div id="course-rating-stars" class="flex items-center gap-1 text-amber-400"></div>
+                                <span id="course-rating-stars-label" class="text-xs font-semibold text-gray-600 dark:text-gray-300">5 of 5 Stars</span>
+                            </div>
+                        </div>
+
+                        <!-- Star Rating 2: Campus Facilities -->
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-850/50 border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-bold text-gray-900 dark:text-white mb-1">
+                                2. Campus Infrastructure & Facilities Rating
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2.5">Rate Library, High-speed Wi-Fi, Computer Labs, Canteen, and Sports areas.</p>
+                            <div class="flex items-center gap-4">
+                                <div id="facilities-rating-stars" class="flex items-center gap-1 text-amber-400"></div>
+                                <span id="facilities-rating-stars-label" class="text-xs font-semibold text-gray-600 dark:text-gray-300">4 of 5 Stars</span>
+                            </div>
+                        </div>
+
+                        <!-- Multi-select Chips: Career / Skill Interests -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                Primary Career / Technical Interests (Select all that apply)
+                            </label>
+                            <div id="interests-chips-container" class="flex flex-wrap gap-2 pt-1">
+                                <!-- Chips dynamically inserted -->
+                            </div>
+                        </div>
+
+                        <!-- Radio: Placement Assistance -->
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-850/50 border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-bold text-gray-900 dark:text-white mb-2">
+                                Do you require Campus Placement / Internship Assistance?
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer hover:border-indigo-400 transition-colors">
+                                    <input type="radio" name="placementAssistance" value="Yes" checked class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-xs font-semibold text-gray-700 dark:text-gray-200">Yes, Actively Seeking</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer hover:border-indigo-400 transition-colors">
+                                    <input type="radio" name="placementAssistance" value="No (Higher Studies)" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-xs font-semibold text-gray-700 dark:text-gray-200">No (Higher Studies/Govt)</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer hover:border-indigo-400 transition-colors">
+                                    <input type="radio" name="placementAssistance" value="Undecided" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-xs font-semibold text-gray-700 dark:text-gray-200">Undecided / Exploring</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Extracurriculars -->
+                        <div>
+                            <label for="field-extracurriculars" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                Extracurricular Activities / Clubs / Sports (Optional)
+                            </label>
+                            <input type="text" id="field-extracurriculars" placeholder="e.g. Coding Club, Cricket Team, NSS Volunteer, Music Band"
+                                class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                        </div>
+
+                        <!-- Open Feedback / Suggestions -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label for="field-feedback" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                    Suggestions & Improvements for College / Department
+                                </label>
+                                <span id="feedback-char-count" class="text-[11px] text-gray-400 font-mono">0 / 500</span>
+                            </div>
+                            <textarea id="field-feedback" rows="3" maxlength="500" placeholder="Share your suggestions, grievance, or what you like most about our campus..."
+                                class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"></textarea>
+                        </div>
+
+                        <!-- Step 3 Controls -->
+                        <div class="pt-4 flex items-center justify-between">
+                            <button type="button" id="step3-prev-btn" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Back</span>
+                            </button>
+                            <button type="button" id="step3-next-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                                <span>Review Submission</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 4: REVIEW & SUBMIT -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-4-content" class="space-y-6 hidden">
+                        <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <i class="fas fa-shield-check text-emerald-500"></i>
+                                Review Your Survey Details
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Please verify your information before final submission.</p>
+                        </div>
+
+                        <!-- Summary Cards Container -->
+                        <div id="review-summary-content"></div>
+
+                        <!-- Final Step Controls -->
+                        <div class="pt-4 flex items-center justify-between">
+                            <button type="button" id="step4-prev-btn" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Edit Information</span>
+                            </button>
+                            <button type="submit" id="final-submit-btn" class="px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center gap-2">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Confirm & Submit Survey</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Submission Success State Container -->
+            <div id="survey-success-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center space-y-6 animate-fade-in">
+                <div class="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto text-3xl shadow-lg shadow-emerald-500/20">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">Survey Submitted Successfully!</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                        Thank you for your valuable feedback. Your responses have been securely recorded.
+                    </p>
+                </div>
+                <div class="inline-flex flex-col sm:flex-row items-center gap-3 p-4 bg-gray-50 dark:bg-gray-850 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-mono">
+                    <div class="text-gray-500 dark:text-gray-400">Submission Reference ID:</div>
+                    <div id="success-submission-id" class="font-bold text-indigo-600 dark:text-indigo-400 text-sm tracking-wider">STU-123456</div>
+                    <div class="text-gray-400">•</div>
+                    <div id="success-submission-time" class="text-gray-600 dark:text-gray-300">Just now</div>
+                </div>
+                <div class="pt-4 flex flex-wrap justify-center gap-4">
+                    <button type="button" id="submit-another-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Submit Another Response</span>
+                    </button>
+                    <button type="button" onclick="window.print()" class="px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                        <i class="fas fa-print"></i>
+                        <span>Print Receipt</span>
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 3B. ADMIN DASHBOARD & ANALYTICS VIEW -->
+        <!-- ============================================================== -->
+        <section id="admin-view" class="hidden space-y-8">
+            
+            <!-- Admin Top Bar Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white">Admin Analytics Portal</h2>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                            Live Database
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Manage survey submissions, analyze department trends, and export records.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="refresh-data-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-1.5">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <button id="export-excel-btn" class="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5">
+                        <i class="fas fa-file-excel"></i>
+                        <span>Export Excel (.xlsx)</span>
+                    </button>
+                    <button id="export-csv-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5">
+                        <i class="fas fa-file-csv"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <button id="admin-logout-btn" class="px-3 py-2 text-xs font-semibold rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Total Submissions -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Submissions</p>
+                        <h3 id="kpi-total-surveys" class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mt-1">0</h3>
+                        <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1 font-medium">
+                            <i class="fas fa-database"></i> Real-time synced
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+
+                <!-- Average Rating -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Course Rating</p>
+                        <h3 id="kpi-avg-rating" class="text-2xl sm:text-3xl font-extrabold text-amber-500 mt-1">0.0 / 5</h3>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Satisfaction score</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-500 flex items-center justify-center text-xl">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+
+                <!-- Placement Assistance -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Placement Seekers</p>
+                        <h3 id="kpi-placement-need" class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mt-1">0%</h3>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Need campus recruitment</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                </div>
+
+                <!-- Top Department -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Leading Dept</p>
+                        <h3 id="kpi-top-dept" class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white mt-1 truncate max-w-[140px]">None</h3>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Most respondents</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-950 text-violet-600 dark:text-violet-400 flex items-center justify-center text-xl">
+                        <i class="fas fa-building-columns"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Visual Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Chart 1: Department Distribution -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-indigo-500"></i> Department Distribution
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-departments"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Academic Year Distribution -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-column text-indigo-500"></i> Academic Year Breakdown
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-years"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Satisfaction Ratings -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-star-half-stroke text-amber-500"></i> Course Rating Distribution
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-ratings"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Career Interests -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-violet-500"></i> Popular Career & Skill Interests
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-interests"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submissions Table Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden space-y-4 p-6">
+                
+                <!-- Table Header, Search & Filters -->
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Individual Responses</h3>
+                            <p id="table-records-count" class="text-xs text-gray-500 dark:text-gray-400">Loading submissions...</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="add-sample-data-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-750 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-1">
+                                <i class="fas fa-magic"></i> Add Demo Data
+                            </button>
+                            <button id="clear-all-data-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center gap-1">
+                                <i class="fas fa-trash-alt"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter Bar -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 pt-2">
+                        <!-- Search Box -->
+                        <div class="md:col-span-2 relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                                <i class="fas fa-search text-xs"></i>
+                            </span>
+                            <input type="text" id="admin-search-input" placeholder="Search name, roll no, email..."
+                                class="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <!-- Department Filter -->
+                        <div>
+                            <select id="filter-dept" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Departments</option>
+                                <option value="Computer Science & Engineering">Computer Science</option>
+                                <option value="Information Technology">IT</option>
+                                <option value="Electronics & Communication">ECE</option>
+                                <option value="Mechanical Engineering">Mechanical</option>
+                                <option value="Civil Engineering">Civil</option>
+                                <option value="Business & Management">Management</option>
+                            </select>
+                        </div>
+
+                        <!-- Year Filter -->
+                        <div>
+                            <select id="filter-year" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Years</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                                <option value="Post-Graduate">Post-Graduate</option>
+                            </select>
+                        </div>
+
+                        <!-- Rating Filter -->
+                        <div>
+                            <select id="filter-rating" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Ratings</option>
+                                <option value="5">★ 5 Stars</option>
+                                <option value="4">★ 4 Stars</option>
+                                <option value="3">★ 3 Stars</option>
+                                <option value="2">★ 2 Stars</option>
+                                <option value="1">★ 1 Star</option>
+                            </select>
+                        </div>
+
+                        <!-- Sort Filter -->
+                        <div>
+                            <select id="sort-select" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="newest">Sort: Newest First</option>
+                                <option value="oldest">Sort: Oldest First</option>
+                                <option value="name">Sort: Name (A-Z)</option>
+                                <option value="rollNo">Sort: Roll Number</option>
+                                <option value="ratingDesc">Sort: Highest Rating</option>
+                                <option value="cgpaDesc">Sort: Highest CGPA</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Content Container -->
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-50 dark:bg-gray-850/80 text-gray-600 dark:text-gray-400 uppercase font-bold tracking-wider border-b border-gray-200 dark:border-gray-700">
+                            <tr>
+                                <th class="px-4 py-3">ID & Date</th>
+                                <th class="px-4 py-3">Student Name</th>
+                                <th class="px-4 py-3">Department & Year</th>
+                                <th class="px-4 py-3">Academic</th>
+                                <th class="px-4 py-3">Satisfaction</th>
+                                <th class="px-4 py-3">Placement</th>
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="surveys-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <!-- Populated via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ============================================================== -->
+    <!-- 4. MODALS & POPUPS -->
+    <!-- ============================================================== -->
+
+    <!-- 4A. ADMIN LOGIN MODAL -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Admin Access</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Enter passcode to view records</p>
+                    </div>
+                </div>
+                <button type="button" id="admin-login-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="admin-login-form" class="space-y-4">
+                <div>
+                    <label for="admin-passcode-input" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                        Admin Passcode
+                    </label>
+                    <input type="password" id="admin-passcode-input" placeholder="Default: admin123" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <p id="admin-login-error" class="mt-1 text-xs text-red-500 hidden"></p>
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all">
+                        Unlock Dashboard
+                    </button>
+                </div>
+                <p class="text-[11px] text-center text-gray-400">Default passcode is <code class="bg-gray-100 dark:bg-gray-750 px-1.5 py-0.5 rounded text-indigo-500 font-mono">admin123</code></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4B. STUDENT DETAIL MODAL -->
+    <div id="student-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
+                <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-id-badge text-indigo-600 dark:text-indigo-400"></i>
+                    Student Response Profile
+                </h3>
+                <button type="button" id="detail-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="detail-modal-body"></div>
+
+            <div class="pt-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+                <button type="button" id="delete-student-btn" class="px-4 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors">
+                    <i class="fas fa-trash-alt mr-1"></i> Delete Response
+                </button>
+                <button type="button" onclick="closeDetailModal()" class="px-5 py-2 text-xs font-semibold bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl text-gray-800 dark:text-gray-200 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4C. SETTINGS & CLOUD DATABASE MODAL -->
+    <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Database & Free Lifetime Hosting Settings</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Configure free cloud persistence (Supabase / Google Sheets)</p>
+                    </div>
+                </div>
+                <button type="button" id="settings-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="settings-form" class="space-y-4">
+                <!-- Passcode Change -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
+                        Admin Dashboard Passcode
+                    </label>
+                    <input type="text" id="setting-admin-passcode" placeholder="admin123"
+                        class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white">
+                </div>
+
+                <!-- Google Sheets Webhook -->
+                <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fas fa-table text-emerald-500"></i> Google Sheets Webhook URL (Optional)
+                        </label>
+                        <button type="button" id="test-gsheet-btn" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            <i class="fas fa-paper-plane mr-1"></i> Send Test Ping
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400">Deploy our free 10-line Apps Script to send every survey straight into your personal Google Sheet!</p>
+                    <input type="url" id="setting-gsheet-url" placeholder="https://script.google.com/macros/s/.../exec"
+                        class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white font-mono">
+                </div>
+
+                <!-- Supabase Cloud DB -->
+                <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fas fa-database text-indigo-500"></i> Supabase Cloud PostgreSQL (Optional)
+                        </label>
+                        <button type="button" id="test-supabase-btn" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            <i class="fas fa-plug mr-1"></i> Test Connection
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400">Supabase provides a 500MB 100% free lifetime PostgreSQL database with automatic REST APIs.</p>
+                    <div class="space-y-2">
+                        <input type="url" id="setting-supabase-url" placeholder="https://your-project.supabase.co"
+                            class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white font-mono">
+                        <input type="password" id="setting-supabase-key" placeholder="Supabase Anon / Public Key"
+                            class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white font-mono">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 text-xs font-semibold bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-700 dark:text-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition-all">
+                        Save Configurations
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 5. FOOTER -->
+    <!-- ============================================================== -->
+    <footer class="mt-auto border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-850 py-6 text-center text-xs text-gray-500 dark:text-gray-400 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-700 dark:text-gray-300">EduSurvey Platform</span>
+                <span>•</span>
+                <span>Ready for Lifetime-Free Hosting on Vercel / GitHub Pages / Cloudflare</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <i class="fas fa-circle text-[8px] animate-pulse"></i> 100% Free Lifetime Tier
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- App JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
