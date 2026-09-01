@@ -1,1 +1,2632 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSurvey • Student Details & Feedback Portal</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#EEF2FF',
+                            100: '#E0E7FF',
+                            500: '#6366F1',
+                            600: '#4F46E5',
+                            700: '#4338CA',
+                            800: '#3730A3',
+                            900: '#312E81'
+                        },
+                        gray: {
+                            750: '#1e2433',
+                            850: '#141a28'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js CDN for Admin Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- SheetJS (xlsx) for One-Click Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200 antialiased">
+
+    <!-- ============================================================== -->
+    <!-- 1. TOP NAVBAR -->
+    <!-- ============================================================== -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-gray-850/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand / Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                        <i class="fas fa-graduation-cap text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
+                                EduSurvey
+                            </span>
+                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                                Free Lifetime
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 hidden sm:block">Student Information & Feedback System</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="flex items-center gap-1 sm:gap-2">
+                    <button id="nav-survey-btn" class="px-3.5 py-2 text-sm font-semibold rounded-lg border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 transition-all flex items-center gap-2">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Survey Form</span>
+                    </button>
+                    <button id="nav-admin-btn" class="px-3.5 py-2 text-sm font-semibold rounded-lg border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Admin Dashboard</span>
+                    </button>
+                </nav>
+
+                <!-- Actions / Controls -->
+                <div class="flex items-center gap-2">
+                    <button id="nav-settings-btn" title="Cloud & Database Settings" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button id="theme-toggle-btn" title="Toggle Dark/Light Mode" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <i id="theme-moon-icon" class="fas fa-moon"></i>
+                        <i id="theme-sun-icon" class="fas fa-sun hidden text-amber-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- 2. TOAST NOTIFICATION CONTAINER -->
+    <!-- ============================================================== -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- ============================================================== -->
+    <!-- 3. MAIN CONTENT VIEWS -->
+    <!-- ============================================================== -->
+    <main class="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+
+        <!-- ============================================================== -->
+        <!-- 3A. STUDENT SURVEY VIEW -->
+        <!-- ============================================================== -->
+        <section id="survey-view" class="space-y-8 max-w-3xl mx-auto">
+            
+            <!-- Survey Banner Header -->
+            <div class="text-center space-y-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60">
+                    <i class="fas fa-clock text-[10px]"></i> Estimated time: ~2 minutes
+                </span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+                    Student Details & Experience Survey
+                </h1>
+                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+                    Please take a moment to provide your academic information, learning feedback, and career goals. Your response helps improve campus resources!
+                </p>
+            </div>
+
+            <!-- Survey Form Container -->
+            <div id="survey-form-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-gray-700 overflow-hidden transition-all">
+                
+                <!-- Wizard Step Indicators -->
+                <div class="p-6 bg-gray-50/80 dark:bg-gray-850/50 border-b border-gray-200 dark:border-gray-700/80">
+                    <div class="flex items-center justify-between relative max-w-md mx-auto">
+                        <!-- Step 1 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-1" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100 dark:ring-indigo-900">1</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Personal</span>
+                        </div>
+                        <div id="step-line-1" class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 -mx-2 transition-all"></div>
+                        
+                        <!-- Step 2 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-2" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">2</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Academic</span>
+                        </div>
+                        <div id="step-line-2" class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 -mx-2 transition-all"></div>
+                        
+                        <!-- Step 3 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-3" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">3</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Feedback</span>
+                        </div>
+                        <div id="step-line-3" class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 -mx-2 transition-all"></div>
+                        
+                        <!-- Step 4 -->
+                        <div class="flex flex-col items-center relative z-10">
+                            <div id="step-indicator-4" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">4</div>
+                            <span class="text-[11px] font-semibold mt-1 text-gray-600 dark:text-gray-400">Submit</span>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <p id="form-progress-text" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                            Step 1: Personal & Contact Information
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Main Form Form Element -->
+                <form id="survey-form" class="p-6 sm:p-8 space-y-6" novalidate>
+                    
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 1: PERSONAL DETAILS -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-1-content" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <!-- Full Name -->
+                            <div class="sm:col-span-2">
+                                <label for="field-fullName" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Full Name <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" id="field-fullName" placeholder="e.g. Aarav Sharma" required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Roll Number -->
+                            <div>
+                                <label for="field-rollNo" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Student ID / Roll Number <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-id-card"></i>
+                                    </span>
+                                    <input type="text" id="field-rollNo" placeholder="e.g. CS23B045" required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm uppercase">
+                                </div>
+                            </div>
+
+                            <!-- Email Address -->
+                            <div>
+                                <label for="field-email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" id="field-email" placeholder="student@example.edu" required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div>
+                                <label for="field-phone" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Mobile / WhatsApp Number
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="tel" id="field-phone" placeholder="+91 98765 43210"
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Gender -->
+                            <div>
+                                <label for="field-gender" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Gender
+                                </label>
+                                <select id="field-gender"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="Not Specified">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Non-Binary / Other">Non-Binary / Other</option>
+                                    <option value="Prefer Not to Say">Prefer Not to Say</option>
+                                </select>
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="sm:col-span-2">
+                                <label for="field-dob" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Date of Birth (Optional)
+                                </label>
+                                <input type="date" id="field-dob"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Step 1 Controls -->
+                        <div class="pt-4 flex justify-end">
+                            <button type="button" id="step1-next-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                                <span>Continue to Academic Profile</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 2: ACADEMIC PROFILE -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-2-content" class="space-y-5 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <!-- Degree Program -->
+                            <div>
+                                <label for="field-degree" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Degree / Program <span class="text-red-500">*</span>
+                                </label>
+                                <select id="field-degree" required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="B.Tech">B.Tech / B.E (Engineering)</option>
+                                    <option value="B.Sc">B.Sc (Science / CS / IT)</option>
+                                    <option value="BCA">BCA (Computer Applications)</option>
+                                    <option value="B.Com / BBA">B.Com / BBA (Commerce & Business)</option>
+                                    <option value="M.Tech">M.Tech / M.E</option>
+                                    <option value="MBA">MBA (Management)</option>
+                                    <option value="MCA">MCA</option>
+                                    <option value="Ph.D / Research">Ph.D / Research</option>
+                                    <option value="Other">Other Diploma / Degree</option>
+                                </select>
+                            </div>
+
+                            <!-- Department / Major -->
+                            <div>
+                                <label for="field-department" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Department / Branch <span class="text-red-500">*</span>
+                                </label>
+                                <select id="field-department" required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics & Communication">Electronics & Communication</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Business & Management">Business & Management</option>
+                                    <option value="Commerce & Accounting">Commerce & Accounting</option>
+                                    <option value="Arts & Humanities">Arts & Humanities</option>
+                                    <option value="Applied Sciences">Applied Sciences</option>
+                                </select>
+                            </div>
+
+                            <!-- Year of Study -->
+                            <div>
+                                <label for="field-year" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Academic Year <span class="text-red-500">*</span>
+                                </label>
+                                <select id="field-year" required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="1st Year">1st Year (Freshman)</option>
+                                    <option value="2nd Year">2nd Year (Sophomore)</option>
+                                    <option value="3rd Year" selected>3rd Year (Junior)</option>
+                                    <option value="4th Year">4th Year (Senior)</option>
+                                    <option value="Post-Graduate">Post-Graduate / Final Year</option>
+                                </select>
+                            </div>
+
+                            <!-- Semester -->
+                            <div>
+                                <label for="field-semester" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Current Semester
+                                </label>
+                                <select id="field-semester"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                    <option value="Semester 1">Semester 1</option>
+                                    <option value="Semester 2">Semester 2</option>
+                                    <option value="Semester 3">Semester 3</option>
+                                    <option value="Semester 4">Semester 4</option>
+                                    <option value="Semester 5" selected>Semester 5</option>
+                                    <option value="Semester 6">Semester 6</option>
+                                    <option value="Semester 7">Semester 7</option>
+                                    <option value="Semester 8">Semester 8</option>
+                                </select>
+                            </div>
+
+                            <!-- Section -->
+                            <div>
+                                <label for="field-section" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Class Section / Batch
+                                </label>
+                                <input type="text" id="field-section" placeholder="e.g. A or B1"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm uppercase">
+                            </div>
+
+                            <!-- CGPA / Percentage -->
+                            <div>
+                                <label for="field-cgpa" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Current CGPA (or %)
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                                        <i class="fas fa-chart-line"></i>
+                                    </span>
+                                    <input type="text" id="field-cgpa" placeholder="e.g. 8.75 or 85%"
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 Controls -->
+                        <div class="pt-4 flex items-center justify-between">
+                            <button type="button" id="step2-prev-btn" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Back</span>
+                            </button>
+                            <button type="button" id="step2-next-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                                <span>Continue to Feedback</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 3: EXPERIENCE & FEEDBACK -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-3-content" class="space-y-6 hidden">
+                        
+                        <!-- Star Rating 1: Course Curriculum -->
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-850/50 border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-bold text-gray-900 dark:text-white mb-1">
+                                1. Course Curriculum & Faculty Quality Satisfaction <span class="text-red-500">*</span>
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2.5">How satisfied are you with the relevance, teaching style, and practical lab depth?</p>
+                            <div class="flex items-center gap-4">
+                                <div id="course-rating-stars" class="flex items-center gap-1 text-amber-400"></div>
+                                <span id="course-rating-stars-label" class="text-xs font-semibold text-gray-600 dark:text-gray-300">5 of 5 Stars</span>
+                            </div>
+                        </div>
+
+                        <!-- Star Rating 2: Campus Facilities -->
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-850/50 border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-bold text-gray-900 dark:text-white mb-1">
+                                2. Campus Infrastructure & Facilities Rating
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2.5">Rate Library, High-speed Wi-Fi, Computer Labs, Canteen, and Sports areas.</p>
+                            <div class="flex items-center gap-4">
+                                <div id="facilities-rating-stars" class="flex items-center gap-1 text-amber-400"></div>
+                                <span id="facilities-rating-stars-label" class="text-xs font-semibold text-gray-600 dark:text-gray-300">4 of 5 Stars</span>
+                            </div>
+                        </div>
+
+                        <!-- Multi-select Chips: Career / Skill Interests -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                Primary Career / Technical Interests (Select all that apply)
+                            </label>
+                            <div id="interests-chips-container" class="flex flex-wrap gap-2 pt-1">
+                                <!-- Chips dynamically inserted -->
+                            </div>
+                        </div>
+
+                        <!-- Radio: Placement Assistance -->
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-850/50 border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-bold text-gray-900 dark:text-white mb-2">
+                                Do you require Campus Placement / Internship Assistance?
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer hover:border-indigo-400 transition-colors">
+                                    <input type="radio" name="placementAssistance" value="Yes" checked class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-xs font-semibold text-gray-700 dark:text-gray-200">Yes, Actively Seeking</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer hover:border-indigo-400 transition-colors">
+                                    <input type="radio" name="placementAssistance" value="No (Higher Studies)" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-xs font-semibold text-gray-700 dark:text-gray-200">No (Higher Studies/Govt)</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer hover:border-indigo-400 transition-colors">
+                                    <input type="radio" name="placementAssistance" value="Undecided" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-xs font-semibold text-gray-700 dark:text-gray-200">Undecided / Exploring</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Extracurriculars -->
+                        <div>
+                            <label for="field-extracurriculars" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                                Extracurricular Activities / Clubs / Sports (Optional)
+                            </label>
+                            <input type="text" id="field-extracurriculars" placeholder="e.g. Coding Club, Cricket Team, NSS Volunteer, Music Band"
+                                class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+                        </div>
+
+                        <!-- Open Feedback / Suggestions -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label for="field-feedback" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                    Suggestions & Improvements for College / Department
+                                </label>
+                                <span id="feedback-char-count" class="text-[11px] text-gray-400 font-mono">0 / 500</span>
+                            </div>
+                            <textarea id="field-feedback" rows="3" maxlength="500" placeholder="Share your suggestions, grievance, or what you like most about our campus..."
+                                class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"></textarea>
+                        </div>
+
+                        <!-- Step 3 Controls -->
+                        <div class="pt-4 flex items-center justify-between">
+                            <button type="button" id="step3-prev-btn" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Back</span>
+                            </button>
+                            <button type="button" id="step3-next-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                                <span>Review Submission</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- -------------------------------------------------- -->
+                    <!-- STEP 4: REVIEW & SUBMIT -->
+                    <!-- -------------------------------------------------- -->
+                    <div id="step-4-content" class="space-y-6 hidden">
+                        <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <i class="fas fa-shield-check text-emerald-500"></i>
+                                Review Your Survey Details
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Please verify your information before final submission.</p>
+                        </div>
+
+                        <!-- Summary Cards Container -->
+                        <div id="review-summary-content"></div>
+
+                        <!-- Final Step Controls -->
+                        <div class="pt-4 flex items-center justify-between">
+                            <button type="button" id="step4-prev-btn" class="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Edit Information</span>
+                            </button>
+                            <button type="submit" id="final-submit-btn" class="px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center gap-2">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Confirm & Submit Survey</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Submission Success State Container -->
+            <div id="survey-success-container" class="hidden bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center space-y-6 animate-fade-in">
+                <div class="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto text-3xl shadow-lg shadow-emerald-500/20">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">Survey Submitted Successfully!</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                        Thank you for your valuable feedback. Your responses have been securely recorded.
+                    </p>
+                </div>
+                <div class="inline-flex flex-col sm:flex-row items-center gap-3 p-4 bg-gray-50 dark:bg-gray-850 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-mono">
+                    <div class="text-gray-500 dark:text-gray-400">Submission Reference ID:</div>
+                    <div id="success-submission-id" class="font-bold text-indigo-600 dark:text-indigo-400 text-sm tracking-wider">STU-123456</div>
+                    <div class="text-gray-400">•</div>
+                    <div id="success-submission-time" class="text-gray-600 dark:text-gray-300">Just now</div>
+                </div>
+                <div class="pt-4 flex flex-wrap justify-center gap-4">
+                    <button type="button" id="submit-another-btn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Submit Another Response</span>
+                    </button>
+                    <button type="button" onclick="window.print()" class="px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold text-sm transition-all flex items-center gap-2">
+                        <i class="fas fa-print"></i>
+                        <span>Print Receipt</span>
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 3B. ADMIN DASHBOARD & ANALYTICS VIEW -->
+        <!-- ============================================================== -->
+        <section id="admin-view" class="hidden space-y-8">
+            
+            <!-- Admin Top Bar Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white">Admin Analytics Portal</h2>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                            Live Database
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Manage survey submissions, analyze department trends, and export records.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="refresh-data-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-1.5">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <button id="export-excel-btn" class="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5">
+                        <i class="fas fa-file-excel"></i>
+                        <span>Export Excel (.xlsx)</span>
+                    </button>
+                    <button id="export-csv-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5">
+                        <i class="fas fa-file-csv"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <button id="admin-logout-btn" class="px-3 py-2 text-xs font-semibold rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Metric Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Total Submissions -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Submissions</p>
+                        <h3 id="kpi-total-surveys" class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mt-1">0</h3>
+                        <p class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1 font-medium">
+                            <i class="fas fa-database"></i> Real-time synced
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+
+                <!-- Average Rating -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Course Rating</p>
+                        <h3 id="kpi-avg-rating" class="text-2xl sm:text-3xl font-extrabold text-amber-500 mt-1">0.0 / 5</h3>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Satisfaction score</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-500 flex items-center justify-center text-xl">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+
+                <!-- Placement Assistance -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Placement Seekers</p>
+                        <h3 id="kpi-placement-need" class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mt-1">0%</h3>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Need campus recruitment</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                </div>
+
+                <!-- Top Department -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Leading Dept</p>
+                        <h3 id="kpi-top-dept" class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white mt-1 truncate max-w-[140px]">None</h3>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Most respondents</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-950 text-violet-600 dark:text-violet-400 flex items-center justify-center text-xl">
+                        <i class="fas fa-building-columns"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Visual Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Chart 1: Department Distribution -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-indigo-500"></i> Department Distribution
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-departments"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Academic Year Distribution -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-column text-indigo-500"></i> Academic Year Breakdown
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-years"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Satisfaction Ratings -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-star-half-stroke text-amber-500"></i> Course Rating Distribution
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-ratings"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Career Interests -->
+                <div class="p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-violet-500"></i> Popular Career & Skill Interests
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chart-interests"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submissions Table Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden space-y-4 p-6">
+                
+                <!-- Table Header, Search & Filters -->
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Individual Responses</h3>
+                            <p id="table-records-count" class="text-xs text-gray-500 dark:text-gray-400">Loading submissions...</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="add-sample-data-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-750 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-1">
+                                <i class="fas fa-magic"></i> Add Demo Data
+                            </button>
+                            <button id="clear-all-data-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center gap-1">
+                                <i class="fas fa-trash-alt"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter Bar -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 pt-2">
+                        <!-- Search Box -->
+                        <div class="md:col-span-2 relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                                <i class="fas fa-search text-xs"></i>
+                            </span>
+                            <input type="text" id="admin-search-input" placeholder="Search name, roll no, email..."
+                                class="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <!-- Department Filter -->
+                        <div>
+                            <select id="filter-dept" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Departments</option>
+                                <option value="Computer Science & Engineering">Computer Science</option>
+                                <option value="Information Technology">IT</option>
+                                <option value="Electronics & Communication">ECE</option>
+                                <option value="Mechanical Engineering">Mechanical</option>
+                                <option value="Civil Engineering">Civil</option>
+                                <option value="Business & Management">Management</option>
+                            </select>
+                        </div>
+
+                        <!-- Year Filter -->
+                        <div>
+                            <select id="filter-year" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Years</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                                <option value="Post-Graduate">Post-Graduate</option>
+                            </select>
+                        </div>
+
+                        <!-- Rating Filter -->
+                        <div>
+                            <select id="filter-rating" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Ratings</option>
+                                <option value="5">★ 5 Stars</option>
+                                <option value="4">★ 4 Stars</option>
+                                <option value="3">★ 3 Stars</option>
+                                <option value="2">★ 2 Stars</option>
+                                <option value="1">★ 1 Star</option>
+                            </select>
+                        </div>
+
+                        <!-- Sort Filter -->
+                        <div>
+                            <select id="sort-select" class="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="newest">Sort: Newest First</option>
+                                <option value="oldest">Sort: Oldest First</option>
+                                <option value="name">Sort: Name (A-Z)</option>
+                                <option value="rollNo">Sort: Roll Number</option>
+                                <option value="ratingDesc">Sort: Highest Rating</option>
+                                <option value="cgpaDesc">Sort: Highest CGPA</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Content Container -->
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-50 dark:bg-gray-850/80 text-gray-600 dark:text-gray-400 uppercase font-bold tracking-wider border-b border-gray-200 dark:border-gray-700">
+                            <tr>
+                                <th class="px-4 py-3">ID & Date</th>
+                                <th class="px-4 py-3">Student Name</th>
+                                <th class="px-4 py-3">Department & Year</th>
+                                <th class="px-4 py-3">Academic</th>
+                                <th class="px-4 py-3">Satisfaction</th>
+                                <th class="px-4 py-3">Placement</th>
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="surveys-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <!-- Populated via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ============================================================== -->
+    <!-- 4. MODALS & POPUPS -->
+    <!-- ============================================================== -->
+
+    <!-- 4A. ADMIN LOGIN MODAL -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Admin Access</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Enter passcode to view records</p>
+                    </div>
+                </div>
+                <button type="button" id="admin-login-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="admin-login-form" class="space-y-4">
+                <div>
+                    <label for="admin-passcode-input" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                        Admin Passcode
+                    </label>
+                    <input type="password" id="admin-passcode-input" placeholder="Default: admin123" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <p id="admin-login-error" class="mt-1 text-xs text-red-500 hidden"></p>
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all">
+                        Unlock Dashboard
+                    </button>
+                </div>
+                <p class="text-[11px] text-center text-gray-400">Default passcode is <code class="bg-gray-100 dark:bg-gray-750 px-1.5 py-0.5 rounded text-indigo-500 font-mono">admin123</code></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4B. STUDENT DETAIL MODAL -->
+    <div id="student-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
+                <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-id-badge text-indigo-600 dark:text-indigo-400"></i>
+                    Student Response Profile
+                </h3>
+                <button type="button" id="detail-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="detail-modal-body"></div>
+
+            <div class="pt-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+                <button type="button" id="delete-student-btn" class="px-4 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-colors">
+                    <i class="fas fa-trash-alt mr-1"></i> Delete Response
+                </button>
+                <button type="button" onclick="closeDetailModal()" class="px-5 py-2 text-xs font-semibold bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl text-gray-800 dark:text-gray-200 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4C. SETTINGS & CLOUD DATABASE MODAL -->
+    <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Database & Free Lifetime Hosting Settings</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Configure free cloud persistence (Supabase / Google Sheets)</p>
+                    </div>
+                </div>
+                <button type="button" id="settings-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="settings-form" class="space-y-4">
+                <!-- Passcode Change -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
+                        Admin Dashboard Passcode
+                    </label>
+                    <input type="text" id="setting-admin-passcode" placeholder="admin123"
+                        class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white">
+                </div>
+
+                <!-- Google Sheets Webhook -->
+                <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fas fa-table text-emerald-500"></i> Google Sheets Webhook URL (Optional)
+                        </label>
+                        <button type="button" id="test-gsheet-btn" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            <i class="fas fa-paper-plane mr-1"></i> Send Test Ping
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400">Deploy our free 10-line Apps Script to send every survey straight into your personal Google Sheet!</p>
+                    <input type="url" id="setting-gsheet-url" placeholder="https://script.google.com/macros/s/.../exec"
+                        class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white font-mono">
+                </div>
+
+                <!-- Supabase Cloud DB -->
+                <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fas fa-database text-indigo-500"></i> Supabase Cloud PostgreSQL (Optional)
+                        </label>
+                        <button type="button" id="test-supabase-btn" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            <i class="fas fa-plug mr-1"></i> Test Connection
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400">Supabase provides a 500MB 100% free lifetime PostgreSQL database with automatic REST APIs.</p>
+                    <div class="space-y-2">
+                        <input type="url" id="setting-supabase-url" placeholder="https://your-project.supabase.co"
+                            class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white font-mono">
+                        <input type="password" id="setting-supabase-key" placeholder="Supabase Anon / Public Key"
+                            class="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-xs text-gray-900 dark:text-white font-mono">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 text-xs font-semibold bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-700 dark:text-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition-all">
+                        Save Configurations
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 5. FOOTER -->
+    <!-- ============================================================== -->
+    <footer class="mt-auto border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-850 py-6 text-center text-xs text-gray-500 dark:text-gray-400 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-700 dark:text-gray-300">EduSurvey Platform</span>
+                <span>•</span>
+                <span>Ready for Lifetime-Free Hosting on Vercel / GitHub Pages / Cloudflare</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <i class="fas fa-circle text-[8px] animate-pulse"></i> 100% Free Lifetime Tier
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- App JavaScript -->
+    <script>
+/**
+ * Student Survey & Analytics Management System
+ * Author: Antigravity
+ * 100% Free Lifetime Hosting Compatible (Vercel / GitHub Pages / Cloudflare Pages)
+ */
+
+// ==========================================
+// 1. CONFIGURATION & STATE
+// ==========================================
+const STORAGE_KEY_SURVEYS = 'student_survey_submissions_v1';
+const STORAGE_KEY_SETTINGS = 'student_survey_settings_v1';
+const STORAGE_KEY_THEME = 'student_survey_theme_v1';
+
+const DEFAULT_SETTINGS = {
+    adminPasscode: 'admin123',
+    supabaseUrl: '',
+    supabaseAnonKey: '',
+    googleSheetWebhookUrl: '',
+    enableLocalStorageBackup: true
+};
+
+let appState = {
+    currentTab: 'survey', // 'survey' | 'admin' | 'settings'
+    surveyStep: 1,
+    totalSteps: 4,
+    isAdminAuthenticated: false,
+    surveys: [],
+    filteredSurveys: [],
+    selectedSurvey: null,
+    settings: { ...DEFAULT_SETTINGS },
+    charts: {},
+    formData: {
+        id: '',
+        timestamp: '',
+        fullName: '',
+        rollNo: '',
+        email: '',
+        phone: '',
+        gender: '',
+        dob: '',
+        degree: 'B.Tech',
+        department: 'Computer Science & Engineering',
+        year: '3rd Year',
+        semester: 'Semester 5',
+        section: 'A',
+        cgpa: '',
+        courseRating: 5,
+        facilitiesRating: 4,
+        interests: ['Artificial Intelligence / ML', 'Full Stack Web Dev'],
+        placementAssistance: 'Yes',
+        extracurriculars: '',
+        feedback: ''
+    }
+};
+
+// Initial Sample Data for instant demonstration
+const INITIAL_DEMO_DATA = [
+    {
+        id: "STU-882101",
+        timestamp: "2026-08-30T10:15:30.000Z",
+        fullName: "Aarav Sharma",
+        rollNo: "CS23B045",
+        email: "aarav.sharma@example.edu",
+        phone: "+91 98765 43210",
+        gender: "Male",
+        dob: "2004-05-14",
+        degree: "B.Tech",
+        department: "Computer Science & Engineering",
+        year: "3rd Year",
+        semester: "Semester 5",
+        section: "A",
+        cgpa: "8.92",
+        courseRating: 5,
+        facilitiesRating: 4,
+        interests: ["Artificial Intelligence / ML", "Full Stack Web Dev", "Cloud & DevOps"],
+        placementAssistance: "Yes",
+        extracurriculars: "Hackathon Organizer, College Cricket Team",
+        feedback: "The lab infrastructure is fantastic. More industry mentorship workshops on AI would be very helpful!"
+    },
+    {
+        id: "STU-882102",
+        timestamp: "2026-08-30T11:42:15.000Z",
+        fullName: "Priya Patel",
+        rollNo: "EC23B018",
+        email: "priya.patel@example.edu",
+        phone: "+91 98123 45678",
+        gender: "Female",
+        dob: "2004-08-22",
+        degree: "B.Tech",
+        department: "Electronics & Communication",
+        year: "3rd Year",
+        semester: "Semester 5",
+        section: "B",
+        cgpa: "9.15",
+        courseRating: 4,
+        facilitiesRating: 5,
+        interests: ["VLSI & Embedded Systems", "IoT & Robotics"],
+        placementAssistance: "Yes",
+        extracurriculars: "Robotics Club Lead, Classical Dance Club",
+        feedback: "Great faculty support for research publications and hardware prototyping labs."
+    },
+    {
+        id: "STU-882103",
+        timestamp: "2026-08-30T14:20:00.000Z",
+        fullName: "Rohan Varma",
+        rollNo: "ME22B089",
+        email: "rohan.varma@example.edu",
+        phone: "+91 97654 32109",
+        gender: "Male",
+        dob: "2003-11-03",
+        degree: "B.Tech",
+        department: "Mechanical Engineering",
+        year: "4th Year",
+        semester: "Semester 7",
+        section: "A",
+        cgpa: "7.85",
+        courseRating: 4,
+        facilitiesRating: 3,
+        interests: ["CAD/CAM & Product Design", "Electric Vehicles (EV)"],
+        placementAssistance: "Yes",
+        extracurriculars: "Formula Student Racing Team Member",
+        feedback: "Need more high-speed computers in the CAD lab for ANSYS and SolidWorks simulations."
+    },
+    {
+        id: "STU-882104",
+        timestamp: "2026-08-31T09:10:45.000Z",
+        fullName: "Sneha Mukherjee",
+        rollNo: "IT24B012",
+        email: "sneha.m@example.edu",
+        phone: "+91 98450 12345",
+        gender: "Female",
+        dob: "2005-02-19",
+        degree: "B.Tech",
+        department: "Information Technology",
+        year: "2nd Year",
+        semester: "Semester 3",
+        section: "C",
+        cgpa: "8.60",
+        courseRating: 5,
+        facilitiesRating: 4,
+        interests: ["Cybersecurity", "Full Stack Web Dev"],
+        placementAssistance: "Undecided",
+        extracurriculars: "Debating Society, Photography Club",
+        feedback: "Campus Wi-Fi connectivity in the library reading room needs better coverage."
+    },
+    {
+        id: "STU-882105",
+        timestamp: "2026-08-31T15:33:10.000Z",
+        fullName: "Ananya Iyer",
+        rollNo: "MB24A005",
+        email: "ananya.iyer@example.edu",
+        phone: "+91 99001 54321",
+        gender: "Female",
+        dob: "2002-09-10",
+        degree: "MBA",
+        department: "Business & Management",
+        year: "Post-Graduate",
+        semester: "Semester 2",
+        section: "A",
+        cgpa: "9.40",
+        courseRating: 5,
+        facilitiesRating: 5,
+        interests: ["Product Management", "Data Analytics & BI", "Finance & Fintech"],
+        placementAssistance: "Yes",
+        extracurriculars: "Student Placement Committee Lead",
+        feedback: "Case study methodology in corporate strategy lectures is extremely practical!"
+    },
+    {
+        id: "STU-882106",
+        timestamp: "2026-08-31T18:05:00.000Z",
+        fullName: "Vikramaditya Rao",
+        rollNo: "CE25B034",
+        email: "vikram.rao@example.edu",
+        phone: "+91 97312 98765",
+        gender: "Male",
+        dob: "2006-01-25",
+        degree: "B.Tech",
+        department: "Civil Engineering",
+        year: "1st Year",
+        semester: "Semester 1",
+        section: "B",
+        cgpa: "8.20",
+        courseRating: 4,
+        facilitiesRating: 4,
+        interests: ["Structural Engineering", "Smart City Planning"],
+        placementAssistance: "No (Higher Studies)",
+        extracurriculars: "Badminton, NSS Volunteer",
+        feedback: "Orientation week was very welcoming and helpful for first-year freshmen."
+    }
+];
+
+// ==========================================
+// 2. INITIALIZATION
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    loadSettings();
+    loadSurveys();
+    initTheme();
+    setupEventListeners();
+    renderStarPickers();
+    renderInterestsChips();
+    updateStepUI();
+});
+
+// ==========================================
+// 3. STORAGE & DATABASE SERVICE
+// ==========================================
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        if (saved) {
+            appState.settings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+        }
+    } catch (e) {
+        console.error('Error loading settings', e);
+    }
+}
+
+function saveSettings() {
+    try {
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(appState.settings));
+    } catch (e) {
+        console.error('Error saving settings', e);
+    }
+}
+
+function loadSurveys() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY_SURVEYS);
+        if (saved) {
+            appState.surveys = JSON.parse(saved);
+        } else {
+            // First time load: populate with demo data
+            appState.surveys = [...INITIAL_DEMO_DATA];
+            saveSurveys();
+        }
+    } catch (e) {
+        console.error('Error loading surveys from storage', e);
+        appState.surveys = [...INITIAL_DEMO_DATA];
+    }
+    appState.filteredSurveys = [...appState.surveys];
+}
+
+function saveSurveys() {
+    try {
+        localStorage.setItem(STORAGE_KEY_SURVEYS, JSON.stringify(appState.surveys));
+    } catch (e) {
+        console.error('Error saving surveys to storage', e);
+    }
+}
+
+/**
+ * Submit survey response to storage + optional Supabase + optional Google Sheets
+ */
+async function submitSurveyRecord(record) {
+    // 1. Save to LocalStorage immediately
+    appState.surveys.unshift(record);
+    saveSurveys();
+    appState.filteredSurveys = [...appState.surveys];
+
+    const syncPromises = [];
+
+    // 2. Sync to Supabase if configured
+    if (appState.settings.supabaseUrl && appState.settings.supabaseAnonKey) {
+        syncPromises.push(
+            fetch(`${appState.settings.supabaseUrl.replace(/\/$/, '')}/rest/v1/student_surveys`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': appState.settings.supabaseAnonKey,
+                    'Authorization': `Bearer ${appState.settings.supabaseAnonKey}`,
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({
+                    id: record.id,
+                    created_at: record.timestamp,
+                    full_name: record.fullName,
+                    roll_no: record.rollNo,
+                    email: record.email,
+                    phone: record.phone,
+                    gender: record.gender,
+                    dob: record.dob || null,
+                    degree: record.degree,
+                    department: record.department,
+                    year: record.year,
+                    semester: record.semester,
+                    section: record.section,
+                    cgpa: record.cgpa ? parseFloat(record.cgpa) : null,
+                    course_rating: parseInt(record.courseRating, 10),
+                    facilities_rating: parseInt(record.facilitiesRating, 10),
+                    interests: record.interests,
+                    placement_assistance: record.placementAssistance,
+                    extracurriculars: record.extracurriculars,
+                    feedback: record.feedback
+                })
+            }).then(res => {
+                if (!res.ok) console.warn('Supabase sync response not ok:', res.status);
+                return res;
+            }).catch(err => console.warn('Supabase sync failed (offline or wrong config):', err))
+        );
+    }
+
+    // 3. Sync to Google Sheet Webhook if configured
+    if (appState.settings.googleSheetWebhookUrl) {
+        syncPromises.push(
+            fetch(appState.settings.googleSheetWebhookUrl, {
+                method: 'POST',
+                mode: 'no-cors', // Google Apps Script handles no-cors redirect smoothly
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(record)
+            }).catch(err => console.warn('Google Sheet sync failed:', err))
+        );
+    }
+
+    // Wait for external syncs without blocking user success screen
+    Promise.allSettled(syncPromises);
+    return record;
+}
+
+// ==========================================
+// 4. THEME & UI CONTROLS
+// ==========================================
+function initTheme() {
+    const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+    
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+    updateThemeIcon();
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
+    updateThemeIcon();
+    if (appState.isAdminAuthenticated) {
+        renderCharts(); // re-render charts with correct theme colors
+    }
+}
+
+function updateThemeIcon() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const moonIcon = document.getElementById('theme-moon-icon');
+    const sunIcon = document.getElementById('theme-sun-icon');
+    if (moonIcon && sunIcon) {
+        if (isDark) {
+            moonIcon.classList.add('hidden');
+            sunIcon.classList.remove('hidden');
+        } else {
+            moonIcon.classList.remove('hidden');
+            sunIcon.classList.add('hidden');
+        }
+    }
+}
+
+// ==========================================
+// 5. EVENT LISTENERS
+// ==========================================
+function setupEventListeners() {
+    // Navigation Tabs
+    document.getElementById('nav-survey-btn')?.addEventListener('click', () => switchTab('survey'));
+    document.getElementById('nav-admin-btn')?.addEventListener('click', () => handleAdminNavClick());
+    document.getElementById('nav-settings-btn')?.addEventListener('click', () => openSettingsModal());
+    document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
+
+    // Survey Form Step Buttons
+    document.getElementById('step1-next-btn')?.addEventListener('click', () => handleStepNext(1));
+    document.getElementById('step2-prev-btn')?.addEventListener('click', () => setStep(1));
+    document.getElementById('step2-next-btn')?.addEventListener('click', () => handleStepNext(2));
+    document.getElementById('step3-prev-btn')?.addEventListener('click', () => setStep(2));
+    document.getElementById('step3-next-btn')?.addEventListener('click', () => handleStepNext(3));
+    document.getElementById('step4-prev-btn')?.addEventListener('click', () => setStep(3));
+    document.getElementById('survey-form')?.addEventListener('submit', handleSurveySubmit);
+    document.getElementById('submit-another-btn')?.addEventListener('click', resetSurveyForm);
+
+    // Admin Auth
+    document.getElementById('admin-login-form')?.addEventListener('submit', handleAdminLogin);
+    document.getElementById('admin-logout-btn')?.addEventListener('click', handleAdminLogout);
+    document.getElementById('admin-login-modal-close')?.addEventListener('click', closeAdminLoginModal);
+
+    // Admin Table Controls
+    document.getElementById('admin-search-input')?.addEventListener('input', debounce(applyAdminFilters, 250));
+    document.getElementById('filter-dept')?.addEventListener('change', applyAdminFilters);
+    document.getElementById('filter-year')?.addEventListener('change', applyAdminFilters);
+    document.getElementById('filter-placement')?.addEventListener('change', applyAdminFilters);
+    document.getElementById('filter-rating')?.addEventListener('change', applyAdminFilters);
+    document.getElementById('sort-select')?.addEventListener('change', applyAdminFilters);
+    document.getElementById('clear-filters-btn')?.addEventListener('click', clearAdminFilters);
+
+    // Export & Action Buttons
+    document.getElementById('export-excel-btn')?.addEventListener('click', exportToExcel);
+    document.getElementById('export-csv-btn')?.addEventListener('click', exportToCSV);
+    document.getElementById('print-report-btn')?.addEventListener('click', () => window.print());
+    document.getElementById('refresh-data-btn')?.addEventListener('click', () => {
+        loadSurveys();
+        renderAdminDashboard();
+        showToast('Data refreshed successfully', 'info');
+    });
+    document.getElementById('add-sample-data-btn')?.addEventListener('click', addMoreSampleData);
+    document.getElementById('clear-all-data-btn')?.addEventListener('click', confirmClearAllData);
+
+    // Settings Modal
+    document.getElementById('settings-modal-close')?.addEventListener('click', closeSettingsModal);
+    document.getElementById('settings-form')?.addEventListener('submit', handleSettingsSave);
+    document.getElementById('test-supabase-btn')?.addEventListener('click', testSupabaseConnection);
+    document.getElementById('test-gsheet-btn')?.addEventListener('click', testGoogleSheetWebhook);
+
+    // Detail Modal
+    document.getElementById('detail-modal-close')?.addEventListener('click', closeDetailModal);
+    document.getElementById('delete-student-btn')?.addEventListener('click', deleteCurrentStudent);
+
+    // Character Counter for Feedback
+    const feedbackArea = document.getElementById('field-feedback');
+    feedbackArea?.addEventListener('input', (e) => {
+        const count = e.target.value.length;
+        const counterEl = document.getElementById('feedback-char-count');
+        if (counterEl) counterEl.textContent = `${count} / 500`;
+    });
+}
+
+function switchTab(tab) {
+    appState.currentTab = tab;
+    
+    const surveyView = document.getElementById('survey-view');
+    const adminView = document.getElementById('admin-view');
+    const navSurveyBtn = document.getElementById('nav-survey-btn');
+    const navAdminBtn = document.getElementById('nav-admin-btn');
+
+    if (tab === 'survey') {
+        surveyView?.classList.remove('hidden');
+        adminView?.classList.add('hidden');
+        navSurveyBtn?.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+        navSurveyBtn?.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        navAdminBtn?.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+        navAdminBtn?.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    } else if (tab === 'admin') {
+        surveyView?.classList.add('hidden');
+        adminView?.classList.remove('hidden');
+        navAdminBtn?.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+        navAdminBtn?.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        navSurveyBtn?.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+        navSurveyBtn?.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        
+        renderAdminDashboard();
+    }
+}
+
+// ==========================================
+// 6. SURVEY FORM WIZARD LOGIC
+// ==========================================
+function setStep(step) {
+    if (step < 1 || step > appState.totalSteps) return;
+    appState.surveyStep = step;
+    updateStepUI();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepUI() {
+    for (let i = 1; i <= appState.totalSteps; i++) {
+        const stepContainer = document.getElementById(`step-${i}-content`);
+        const stepIndicator = document.getElementById(`step-indicator-${i}`);
+        const stepLine = document.getElementById(`step-line-${i}`);
+
+        if (i === appState.surveyStep) {
+            stepContainer?.classList.remove('hidden');
+        } else {
+            stepContainer?.classList.add('hidden');
+        }
+
+        if (stepIndicator) {
+            if (i < appState.surveyStep) {
+                // Completed
+                stepIndicator.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-green-500 text-white shadow-md";
+                stepIndicator.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (i === appState.surveyStep) {
+                // Current
+                stepIndicator.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100 dark:ring-indigo-900";
+                stepIndicator.innerHTML = `${i}`;
+            } else {
+                // Upcoming
+                stepIndicator.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400";
+                stepIndicator.innerHTML = `${i}`;
+            }
+        }
+
+        if (stepLine) {
+            if (i < appState.surveyStep) {
+                stepLine.className = "flex-1 h-1 bg-green-500 transition-all duration-300";
+            } else {
+                stepLine.className = "flex-1 h-1 bg-gray-200 dark:bg-gray-700 transition-all duration-300";
+            }
+        }
+    }
+
+    // Step Progress Text
+    const progressText = document.getElementById('form-progress-text');
+    if (progressText) {
+        const stepTitles = [
+            "Step 1: Personal & Contact Information",
+            "Step 2: Academic Profile",
+            "Step 3: Campus Experience & Feedback",
+            "Step 4: Review & Submit"
+        ];
+        progressText.textContent = stepTitles[appState.surveyStep - 1];
+    }
+}
+
+function handleStepNext(currentStep) {
+    if (validateStep(currentStep)) {
+        collectFormDataFromStep(currentStep);
+        if (currentStep === 3) {
+            populateReviewStep();
+        }
+        setStep(currentStep + 1);
+    }
+}
+
+function validateStep(step) {
+    let isValid = true;
+    clearFieldErrors();
+
+    if (step === 1) {
+        const fullName = document.getElementById('field-fullName')?.value.trim();
+        const rollNo = document.getElementById('field-rollNo')?.value.trim();
+        const email = document.getElementById('field-email')?.value.trim();
+        const phone = document.getElementById('field-phone')?.value.trim();
+
+        if (!fullName) {
+            showFieldError('field-fullName', 'Full Name is required');
+            isValid = false;
+        } else if (fullName.length < 2) {
+            showFieldError('field-fullName', 'Please enter a valid full name');
+            isValid = false;
+        }
+
+        if (!rollNo) {
+            showFieldError('field-rollNo', 'Student ID / Roll Number is required');
+            isValid = false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+            showFieldError('field-email', 'Email Address is required');
+            isValid = false;
+        } else if (!emailRegex.test(email)) {
+            showFieldError('field-email', 'Please enter a valid email address');
+            isValid = false;
+        }
+
+        if (phone && phone.replace(/\D/g, '').length < 7) {
+            showFieldError('field-phone', 'Please enter a valid phone number (minimum 7 digits)');
+            isValid = false;
+        }
+    }
+
+    if (step === 2) {
+        const degree = document.getElementById('field-degree')?.value;
+        const department = document.getElementById('field-department')?.value;
+        const year = document.getElementById('field-year')?.value;
+        const cgpa = document.getElementById('field-cgpa')?.value.trim();
+
+        if (!degree) {
+            showFieldError('field-degree', 'Please select your degree/program');
+            isValid = false;
+        }
+        if (!department) {
+            showFieldError('field-department', 'Please select your department/branch');
+            isValid = false;
+        }
+        if (!year) {
+            showFieldError('field-year', 'Please select your current academic year');
+            isValid = false;
+        }
+        if (cgpa) {
+            const num = parseFloat(cgpa);
+            if (isNaN(num) || num < 0 || num > 100) {
+                showFieldError('field-cgpa', 'Enter a valid CGPA (0-10) or Percentage (0-100)');
+                isValid = false;
+            }
+        }
+    }
+
+    if (step === 3) {
+        if (!appState.formData.courseRating) {
+            showToast('Please rate your course curriculum satisfaction', 'warning');
+            isValid = false;
+        }
+    }
+
+    return isValid;
+}
+
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    field.classList.add('border-red-500', 'focus:ring-red-500');
+    
+    let errorEl = document.getElementById(`${fieldId}-error`);
+    if (!errorEl) {
+        errorEl = document.createElement('p');
+        errorEl.id = `${fieldId}-error`;
+        errorEl.className = 'mt-1 text-xs font-medium text-red-500 flex items-center gap-1';
+        field.parentElement.appendChild(errorEl);
+    }
+    errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+}
+
+function clearFieldErrors() {
+    document.querySelectorAll('.border-red-500').forEach(el => {
+        el.classList.remove('border-red-500', 'focus:ring-red-500');
+    });
+    document.querySelectorAll('[id$="-error"]').forEach(el => el.remove());
+}
+
+function collectFormDataFromStep(step) {
+    if (step === 1) {
+        appState.formData.fullName = document.getElementById('field-fullName')?.value.trim();
+        appState.formData.rollNo = document.getElementById('field-rollNo')?.value.trim().toUpperCase();
+        appState.formData.email = document.getElementById('field-email')?.value.trim();
+        appState.formData.phone = document.getElementById('field-phone')?.value.trim();
+        appState.formData.gender = document.getElementById('field-gender')?.value || 'Not Specified';
+        appState.formData.dob = document.getElementById('field-dob')?.value || '';
+    } else if (step === 2) {
+        appState.formData.degree = document.getElementById('field-degree')?.value;
+        appState.formData.department = document.getElementById('field-department')?.value;
+        appState.formData.year = document.getElementById('field-year')?.value;
+        appState.formData.semester = document.getElementById('field-semester')?.value;
+        appState.formData.section = document.getElementById('field-section')?.value.trim().toUpperCase() || 'N/A';
+        appState.formData.cgpa = document.getElementById('field-cgpa')?.value.trim() || 'N/A';
+    } else if (step === 3) {
+        const placementRadios = document.getElementsByName('placementAssistance');
+        for (let radio of placementRadios) {
+            if (radio.checked) {
+                appState.formData.placementAssistance = radio.value;
+                break;
+            }
+        }
+        appState.formData.extracurriculars = document.getElementById('field-extracurriculars')?.value.trim() || 'None';
+        appState.formData.feedback = document.getElementById('field-feedback')?.value.trim() || 'No additional comments provided.';
+    }
+}
+
+function renderStarPickers() {
+    const setupStars = (containerId, stateKey, initialValue = 5) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        appState.formData[stateKey] = initialValue;
+
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('button');
+            star.type = 'button';
+            star.dataset.val = i;
+            star.className = `text-2xl transition-transform hover:scale-125 focus:outline-none p-1 ${
+                i <= initialValue ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'
+            }`;
+            star.innerHTML = '<i class="fas fa-star"></i>';
+
+            star.addEventListener('click', () => {
+                appState.formData[stateKey] = i;
+                updateStarVisuals(container, i);
+                const scoreLabel = document.getElementById(`${containerId}-label`);
+                if (scoreLabel) scoreLabel.textContent = `${i} of 5 Stars`;
+            });
+
+            container.appendChild(star);
+        }
+    };
+
+    setupStars('course-rating-stars', 'courseRating', 5);
+    setupStars('facilities-rating-stars', 'facilitiesRating', 4);
+}
+
+function updateStarVisuals(container, selectedValue) {
+    const stars = container.querySelectorAll('button');
+    stars.forEach(btn => {
+        const val = parseInt(btn.dataset.val, 10);
+        if (val <= selectedValue) {
+            btn.className = 'text-2xl transition-transform hover:scale-125 focus:outline-none p-1 text-amber-400';
+        } else {
+            btn.className = 'text-2xl transition-transform hover:scale-125 focus:outline-none p-1 text-gray-300 dark:text-gray-600';
+        }
+    });
+}
+
+const AVAILABLE_INTERESTS = [
+    "Artificial Intelligence / ML",
+    "Full Stack Web Dev",
+    "Cloud Computing & DevOps",
+    "Cybersecurity & Ethical Hacking",
+    "Mobile App Development",
+    "Data Science & Analytics",
+    "IoT & Robotics",
+    "VLSI & Chip Design",
+    "Electric Vehicles & Auto",
+    "Product Management",
+    "Finance & Fintech",
+    "Civil & Smart Cities",
+    "Higher Studies / GRE",
+    "Civil Services / Gov Exams"
+];
+
+function renderInterestsChips() {
+    const container = document.getElementById('interests-chips-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    AVAILABLE_INTERESTS.forEach(interest => {
+        const isSelected = appState.formData.interests.includes(interest);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = `px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+            isSelected
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
+        }`;
+        chip.innerHTML = `${interest} ${isSelected ? '<i class="fas fa-check ml-1"></i>' : '<i class="fas fa-plus ml-1 text-gray-400"></i>'}`;
+
+        chip.addEventListener('click', () => {
+            if (appState.formData.interests.includes(interest)) {
+                appState.formData.interests = appState.formData.interests.filter(item => item !== interest);
+            } else {
+                appState.formData.interests.push(interest);
+            }
+            renderInterestsChips();
+        });
+
+        container.appendChild(chip);
+    });
+}
+
+function populateReviewStep() {
+    const d = appState.formData;
+    const reviewContainer = document.getElementById('review-summary-content');
+    if (!reviewContainer) return;
+
+    reviewContainer.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h4 class="font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
+                    <i class="fas fa-user-circle"></i> Student Details
+                </h4>
+                <div class="space-y-1 text-gray-700 dark:text-gray-300">
+                    <p><span class="text-gray-500 dark:text-gray-400">Full Name:</span> <strong>${escapeHtml(d.fullName)}</strong></p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Roll No / ID:</span> <strong>${escapeHtml(d.rollNo)}</strong></p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Email:</span> ${escapeHtml(d.email)}</p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Phone:</span> ${escapeHtml(d.phone || 'N/A')}</p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Gender / DOB:</span> ${escapeHtml(d.gender)} | ${escapeHtml(d.dob || 'N/A')}</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h4 class="font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
+                    <i class="fas fa-graduation-cap"></i> Academic Profile
+                </h4>
+                <div class="space-y-1 text-gray-700 dark:text-gray-300">
+                    <p><span class="text-gray-500 dark:text-gray-400">Program:</span> <strong>${escapeHtml(d.degree)}</strong></p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Department:</span> <strong>${escapeHtml(d.department)}</strong></p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Year / Sem:</span> ${escapeHtml(d.year)} (${escapeHtml(d.semester)})</p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Section:</span> ${escapeHtml(d.section)}</p>
+                    <p><span class="text-gray-500 dark:text-gray-400">CGPA / %:</span> <span class="font-semibold text-emerald-600 dark:text-emerald-400">${escapeHtml(d.cgpa || 'N/A')}</span></p>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h4 class="font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
+                    <i class="fas fa-star"></i> Ratings & Feedback
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700 dark:text-gray-300 mb-3">
+                    <p><span class="text-gray-500 dark:text-gray-400">Course Satisfaction:</span> <span class="text-amber-500 font-bold">${'★'.repeat(d.courseRating)}${'☆'.repeat(5 - d.courseRating)} (${d.courseRating}/5)</span></p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Campus Facilities:</span> <span class="text-amber-500 font-bold">${'★'.repeat(d.facilitiesRating)}${'☆'.repeat(5 - d.facilitiesRating)} (${d.facilitiesRating}/5)</span></p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Placement Assistance:</span> <span class="font-semibold">${escapeHtml(d.placementAssistance)}</span></p>
+                    <p><span class="text-gray-500 dark:text-gray-400">Extracurriculars:</span> ${escapeHtml(d.extracurriculars || 'None')}</p>
+                </div>
+                <div class="mb-2">
+                    <span class="text-gray-500 dark:text-gray-400 text-xs block mb-1">Career / Skill Interests:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${d.interests.map(i => `<span class="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-medium px-2.5 py-0.5 rounded-full">${escapeHtml(i)}</span>`).join('')}
+                    </div>
+                </div>
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400 text-xs block mb-1">Comments & Suggestions:</span>
+                    <p class="text-xs bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 italic text-gray-600 dark:text-gray-400">
+                        "${escapeHtml(d.feedback || 'None')}"
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function handleSurveySubmit(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('final-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+    }
+
+    try {
+        const submissionId = 'STU-' + Math.floor(100000 + Math.random() * 900000);
+        const record = {
+            ...appState.formData,
+            id: submissionId,
+            timestamp: new Date().toISOString()
+        };
+
+        await submitSurveyRecord(record);
+
+        // Show Success Screen
+        document.getElementById('survey-form-container')?.classList.add('hidden');
+        const successContainer = document.getElementById('survey-success-container');
+        if (successContainer) {
+            successContainer.classList.remove('hidden');
+            const idEl = document.getElementById('success-submission-id');
+            const timeEl = document.getElementById('success-submission-time');
+            if (idEl) idEl.textContent = submissionId;
+            if (timeEl) timeEl.textContent = new Date().toLocaleString();
+        }
+
+        showToast('Survey submitted successfully! Thank you.', 'success');
+
+    } catch (error) {
+        console.error('Submission error:', error);
+        showToast('Error recording submission. Please try again.', 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Confirm & Submit Survey';
+        }
+    }
+}
+
+function resetSurveyForm() {
+    appState.formData = {
+        id: '',
+        timestamp: '',
+        fullName: '',
+        rollNo: '',
+        email: '',
+        phone: '',
+        gender: '',
+        dob: '',
+        degree: 'B.Tech',
+        department: 'Computer Science & Engineering',
+        year: '3rd Year',
+        semester: 'Semester 5',
+        section: 'A',
+        cgpa: '',
+        courseRating: 5,
+        facilitiesRating: 4,
+        interests: ['Artificial Intelligence / ML', 'Full Stack Web Dev'],
+        placementAssistance: 'Yes',
+        extracurriculars: '',
+        feedback: ''
+    };
+
+    document.getElementById('survey-form')?.reset();
+    renderStarPickers();
+    renderInterestsChips();
+    
+    document.getElementById('survey-success-container')?.classList.add('hidden');
+    document.getElementById('survey-form-container')?.classList.remove('hidden');
+    setStep(1);
+}
+
+// ==========================================
+// 7. ADMIN AUTH & DASHBOARD
+// ==========================================
+function handleAdminNavClick() {
+    if (appState.isAdminAuthenticated) {
+        switchTab('admin');
+    } else {
+        openAdminLoginModal();
+    }
+}
+
+function openAdminLoginModal() {
+    const modal = document.getElementById('admin-login-modal');
+    modal?.classList.remove('hidden');
+    document.getElementById('admin-passcode-input')?.focus();
+}
+
+function closeAdminLoginModal() {
+    document.getElementById('admin-login-modal')?.classList.add('hidden');
+}
+
+function handleAdminLogin(e) {
+    e.preventDefault();
+    const inputPass = document.getElementById('admin-passcode-input')?.value;
+    const errorEl = document.getElementById('admin-login-error');
+
+    if (inputPass === appState.settings.adminPasscode) {
+        appState.isAdminAuthenticated = true;
+        closeAdminLoginModal();
+        document.getElementById('admin-passcode-input').value = '';
+        if (errorEl) errorEl.classList.add('hidden');
+        showToast('Logged in as Administrator', 'success');
+        switchTab('admin');
+    } else {
+        if (errorEl) {
+            errorEl.textContent = 'Incorrect passcode. Default is "admin123"';
+            errorEl.classList.remove('hidden');
+        }
+    }
+}
+
+function handleAdminLogout() {
+    appState.isAdminAuthenticated = false;
+    showToast('Logged out of Admin Portal', 'info');
+    switchTab('survey');
+}
+
+function renderAdminDashboard() {
+    renderKPIs();
+    renderCharts();
+    renderSurveysTable();
+}
+
+function renderKPIs() {
+    const list = appState.surveys;
+    const total = list.length;
+
+    // 1. Total Submissions
+    const totalEl = document.getElementById('kpi-total-surveys');
+    if (totalEl) totalEl.textContent = total.toLocaleString();
+
+    // 2. Average Satisfaction Rating
+    const avgRatingEl = document.getElementById('kpi-avg-rating');
+    if (avgRatingEl) {
+        if (total === 0) {
+            avgRatingEl.textContent = '0.0 / 5';
+        } else {
+            const sum = list.reduce((acc, curr) => acc + (parseFloat(curr.courseRating) || 0), 0);
+            const avg = (sum / total).toFixed(1);
+            avgRatingEl.textContent = `${avg} / 5`;
+        }
+    }
+
+    // 3. Placement Assistance Required %
+    const placementEl = document.getElementById('kpi-placement-need');
+    if (placementEl) {
+        if (total === 0) {
+            placementEl.textContent = '0%';
+        } else {
+            const needCount = list.filter(s => s.placementAssistance === 'Yes').length;
+            const pct = Math.round((needCount / total) * 100);
+            placementEl.textContent = `${pct}% (${needCount})`;
+        }
+    }
+
+    // 4. Top Department
+    const topDeptEl = document.getElementById('kpi-top-dept');
+    if (topDeptEl) {
+        if (total === 0) {
+            topDeptEl.textContent = 'None';
+        } else {
+            const deptCounts = {};
+            list.forEach(s => {
+                deptCounts[s.department] = (deptCounts[s.department] || 0) + 1;
+            });
+            const sortedDepts = Object.entries(deptCounts).sort((a, b) => b[1] - a[1]);
+            topDeptEl.textContent = sortedDepts[0] ? sortedDepts[0][0].split(' ')[0] : 'None';
+        }
+    }
+}
+
+function renderCharts() {
+    const list = appState.surveys;
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#9CA3AF' : '#4B5563';
+    const gridColor = isDark ? '#374151' : '#E5E7EB';
+
+    // Chart 1: Department Distribution (Doughnut)
+    const deptCounts = {};
+    list.forEach(s => {
+        const d = s.department || 'Other';
+        deptCounts[d] = (deptCounts[d] || 0) + 1;
+    });
+
+    const deptCtx = document.getElementById('chart-departments')?.getContext('2d');
+    if (deptCtx) {
+        if (appState.charts.dept) appState.charts.dept.destroy();
+        appState.charts.dept = new Chart(deptCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(deptCounts),
+                datasets: [{
+                    data: Object.values(deptCounts),
+                    backgroundColor: [
+                        '#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'
+                    ],
+                    borderWidth: isDark ? 2 : 1,
+                    borderColor: isDark ? '#1F2937' : '#FFFFFF'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: textColor, boxWidth: 12, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // Chart 2: Academic Year Distribution (Bar)
+    const yearCounts = { '1st Year': 0, '2nd Year': 0, '3rd Year': 0, '4th Year': 0, 'Post-Graduate': 0 };
+    list.forEach(s => {
+        if (yearCounts[s.year] !== undefined) {
+            yearCounts[s.year]++;
+        } else {
+            yearCounts[s.year] = 1;
+        }
+    });
+
+    const yearCtx = document.getElementById('chart-years')?.getContext('2d');
+    if (yearCtx) {
+        if (appState.charts.year) appState.charts.year.destroy();
+        appState.charts.year = new Chart(yearCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(yearCounts),
+                datasets: [{
+                    label: 'Students',
+                    data: Object.values(yearCounts),
+                    backgroundColor: '#6366F1',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { display: false } },
+                    y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
+                }
+            }
+        });
+    }
+
+    // Chart 3: Satisfaction Ratings Breakdown (Bar)
+    const ratingCounts = { '5 Stars': 0, '4 Stars': 0, '3 Stars': 0, '2 Stars': 0, '1 Star': 0 };
+    list.forEach(s => {
+        const r = parseInt(s.courseRating, 10);
+        if (r === 5) ratingCounts['5 Stars']++;
+        else if (r === 4) ratingCounts['4 Stars']++;
+        else if (r === 3) ratingCounts['3 Stars']++;
+        else if (r === 2) ratingCounts['2 Stars']++;
+        else if (r === 1) ratingCounts['1 Star']++;
+    });
+
+    const ratingCtx = document.getElementById('chart-ratings')?.getContext('2d');
+    if (ratingCtx) {
+        if (appState.charts.rating) appState.charts.rating.destroy();
+        appState.charts.rating = new Chart(ratingCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(ratingCounts),
+                datasets: [{
+                    label: 'Rating Count',
+                    data: Object.values(ratingCounts),
+                    backgroundColor: ['#10B981', '#34D399', '#FBBF24', '#F97316', '#EF4444'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { display: false } },
+                    y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
+                }
+            }
+        });
+    }
+
+    // Chart 4: Popular Skill & Career Interests (Horizontal Bar)
+    const interestCounts = {};
+    list.forEach(s => {
+        if (Array.isArray(s.interests)) {
+            s.interests.forEach(i => {
+                interestCounts[i] = (interestCounts[i] || 0) + 1;
+            });
+        }
+    });
+
+    const sortedInterests = Object.entries(interestCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+
+    const interestCtx = document.getElementById('chart-interests')?.getContext('2d');
+    if (interestCtx) {
+        if (appState.charts.interests) appState.charts.interests.destroy();
+        appState.charts.interests = new Chart(interestCtx, {
+            type: 'bar',
+            indexAxis: 'y',
+            data: {
+                labels: sortedInterests.map(i => i[0]),
+                datasets: [{
+                    label: 'Count',
+                    data: sortedInterests.map(i => i[1]),
+                    backgroundColor: '#8B5CF6',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+                    y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+}
+
+function applyAdminFilters() {
+    const search = document.getElementById('admin-search-input')?.value.toLowerCase().trim() || '';
+    const dept = document.getElementById('filter-dept')?.value || '';
+    const year = document.getElementById('filter-year')?.value || '';
+    const placement = document.getElementById('filter-placement')?.value || '';
+    const rating = document.getElementById('filter-rating')?.value || '';
+    const sortBy = document.getElementById('sort-select')?.value || 'newest';
+
+    let result = appState.surveys.filter(item => {
+        // Search match
+        if (search) {
+            const matchName = item.fullName?.toLowerCase().includes(search);
+            const matchRoll = item.rollNo?.toLowerCase().includes(search);
+            const matchEmail = item.email?.toLowerCase().includes(search);
+            const matchDept = item.department?.toLowerCase().includes(search);
+            if (!matchName && !matchRoll && !matchEmail && !matchDept) return false;
+        }
+
+        // Filters match
+        if (dept && item.department !== dept) return false;
+        if (year && item.year !== year) return false;
+        if (placement && item.placementAssistance !== placement) return false;
+        if (rating && String(item.courseRating) !== rating) return false;
+
+        return true;
+    });
+
+    // Sorting
+    result.sort((a, b) => {
+        if (sortBy === 'newest') return new Date(b.timestamp) - new Date(a.timestamp);
+        if (sortBy === 'oldest') return new Date(a.timestamp) - new Date(b.timestamp);
+        if (sortBy === 'name') return (a.fullName || '').localeCompare(b.fullName || '');
+        if (sortBy === 'rollNo') return (a.rollNo || '').localeCompare(b.rollNo || '');
+        if (sortBy === 'ratingDesc') return (b.courseRating || 0) - (a.courseRating || 0);
+        if (sortBy === 'cgpaDesc') return (parseFloat(b.cgpa) || 0) - (parseFloat(a.cgpa) || 0);
+        return 0;
+    });
+
+    appState.filteredSurveys = result;
+    renderSurveysTable();
+}
+
+function clearAdminFilters() {
+    if (document.getElementById('admin-search-input')) document.getElementById('admin-search-input').value = '';
+    if (document.getElementById('filter-dept')) document.getElementById('filter-dept').value = '';
+    if (document.getElementById('filter-year')) document.getElementById('filter-year').value = '';
+    if (document.getElementById('filter-placement')) document.getElementById('filter-placement').value = '';
+    if (document.getElementById('filter-rating')) document.getElementById('filter-rating').value = '';
+    if (document.getElementById('sort-select')) document.getElementById('sort-select').value = 'newest';
+    applyAdminFilters();
+}
+
+function renderSurveysTable() {
+    const tbody = document.getElementById('surveys-table-body');
+    const countEl = document.getElementById('table-records-count');
+    if (!tbody) return;
+
+    const list = appState.filteredSurveys;
+    if (countEl) countEl.textContent = `Showing ${list.length} of ${appState.surveys.length} submissions`;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <div class="flex flex-col items-center justify-center">
+                        <i class="fas fa-inbox text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+                        <p class="font-medium text-base">No survey submissions found</p>
+                        <p class="text-xs text-gray-400 mt-1">Try clearing your filters or submit a new survey response.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = list.map(item => {
+        const formattedDate = new Date(item.timestamp).toLocaleDateString(undefined, {
+            month: 'short', day: 'numeric', year: 'numeric'
+        });
+        
+        return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors border-b border-gray-100 dark:border-gray-700/60">
+                <td class="px-4 py-3.5 whitespace-nowrap">
+                    <div class="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">${escapeHtml(item.id)}</div>
+                    <div class="text-[11px] text-gray-400">${formattedDate}</div>
+                </td>
+                <td class="px-4 py-3.5">
+                    <div class="font-semibold text-gray-900 dark:text-white text-sm">${escapeHtml(item.fullName)}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.rollNo)}</div>
+                </td>
+                <td class="px-4 py-3.5 text-xs text-gray-700 dark:text-gray-300">
+                    <div class="font-medium">${escapeHtml(item.department)}</div>
+                    <div class="text-gray-400 text-[11px]">${escapeHtml(item.degree)} • ${escapeHtml(item.year)}</div>
+                </td>
+                <td class="px-4 py-3.5 text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    <div class="font-medium text-emerald-600 dark:text-emerald-400">CGPA: ${escapeHtml(item.cgpa || 'N/A')}</div>
+                    <div class="text-[11px] text-gray-400">Sec ${escapeHtml(item.section || 'A')}</div>
+                </td>
+                <td class="px-4 py-3.5 text-xs whitespace-nowrap">
+                    <span class="inline-flex items-center text-amber-500 font-bold">
+                        ★ ${item.courseRating}/5
+                    </span>
+                    <span class="block text-[11px] text-gray-400">Facilities: ${item.facilitiesRating}/5</span>
+                </td>
+                <td class="px-4 py-3.5 text-xs whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                        item.placementAssistance === 'Yes'
+                            ? 'bg-green-100 dark:bg-green-900/60 text-green-700 dark:text-green-300'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                    }">
+                        ${escapeHtml(item.placementAssistance || 'No')}
+                    </span>
+                </td>
+                <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                    <button onclick="viewStudentDetails('${item.id}')" class="px-2.5 py-1 text-xs font-medium bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/70 text-indigo-600 dark:text-indigo-300 rounded-lg transition-colors mr-1">
+                        <i class="fas fa-eye mr-1"></i> View
+                    </button>
+                    <button onclick="deleteSingleStudent('${item.id}')" class="px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Delete">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Global modal view helper
+window.viewStudentDetails = function(studentId) {
+    const student = appState.surveys.find(s => s.id === studentId);
+    if (!student) return;
+    appState.selectedSurvey = student;
+
+    const modal = document.getElementById('student-detail-modal');
+    const content = document.getElementById('detail-modal-body');
+    if (!modal || !content) return;
+
+    content.innerHTML = `
+        <div class="space-y-6 text-sm">
+            <!-- Header Profile Card -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-lg">
+                        ${escapeHtml(student.fullName.charAt(0).toUpperCase())}
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">${escapeHtml(student.fullName)}</h3>
+                        <p class="text-xs font-mono text-indigo-600 dark:text-indigo-400 font-semibold">${escapeHtml(student.rollNo)} • Submission ID: ${escapeHtml(student.id)}</p>
+                    </div>
+                </div>
+                <div class="mt-3 sm:mt-0 text-right">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Submitted:</span>
+                    <div class="text-xs font-medium text-gray-700 dark:text-gray-300">${new Date(student.timestamp).toLocaleString()}</div>
+                </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-2 text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                        Contact Information
+                    </h4>
+                    <div class="space-y-1.5 text-xs text-gray-700 dark:text-gray-300">
+                        <p><span class="text-gray-400">Email:</span> <a href="mailto:${escapeHtml(student.email)}" class="text-indigo-600 dark:text-indigo-400 hover:underline">${escapeHtml(student.email)}</a></p>
+                        <p><span class="text-gray-400">Phone:</span> ${escapeHtml(student.phone || 'N/A')}</p>
+                        <p><span class="text-gray-400">Gender:</span> ${escapeHtml(student.gender || 'N/A')}</p>
+                        <p><span class="text-gray-400">Date of Birth:</span> ${escapeHtml(student.dob || 'N/A')}</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-2 text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                        Academic Credentials
+                    </h4>
+                    <div class="space-y-1.5 text-xs text-gray-700 dark:text-gray-300">
+                        <p><span class="text-gray-400">Degree:</span> ${escapeHtml(student.degree)}</p>
+                        <p><span class="text-gray-400">Department:</span> <strong>${escapeHtml(student.department)}</strong></p>
+                        <p><span class="text-gray-400">Year / Sem:</span> ${escapeHtml(student.year)} (${escapeHtml(student.semester)})</p>
+                        <p><span class="text-gray-400">Section:</span> ${escapeHtml(student.section || 'A')}</p>
+                        <p><span class="text-gray-400">CGPA:</span> <strong class="text-emerald-600 dark:text-emerald-400">${escapeHtml(student.cgpa || 'N/A')}</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survey Ratings & Feedback -->
+            <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                <h4 class="font-semibold text-gray-900 dark:text-white text-xs uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    Survey Ratings & Career Goals
+                </h4>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <span class="text-gray-400 block mb-0.5">Course Rating</span>
+                        <span class="text-amber-500 font-bold text-base">★ ${student.courseRating} / 5</span>
+                    </div>
+                    <div class="bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <span class="text-gray-400 block mb-0.5">Campus Facilities</span>
+                        <span class="text-amber-500 font-bold text-base">★ ${student.facilitiesRating} / 5</span>
+                    </div>
+                    <div class="bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <span class="text-gray-400 block mb-0.5">Placement Assistance</span>
+                        <span class="font-bold text-sm text-indigo-600 dark:text-indigo-400">${escapeHtml(student.placementAssistance || 'No')}</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-gray-400 text-xs block mb-1">Career / Skill Interests:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${(Array.isArray(student.interests) ? student.interests : [student.interests]).map(i => `
+                            <span class="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-medium px-2.5 py-0.5 rounded-full">${escapeHtml(i)}</span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-gray-400 text-xs block mb-1">Extracurriculars & Clubs:</span>
+                    <p class="text-xs text-gray-700 dark:text-gray-300">${escapeHtml(student.extracurriculars || 'None')}</p>
+                </div>
+
+                <div>
+                    <span class="text-gray-400 text-xs block mb-1">Student Feedback & Suggestions:</span>
+                    <div class="bg-white dark:bg-gray-900 p-3 rounded-lg border border-gray-200 dark:border-gray-700 text-xs italic text-gray-700 dark:text-gray-300">
+                        "${escapeHtml(student.feedback || 'No comments provided.')}"
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+};
+
+function closeDetailModal() {
+    document.getElementById('student-detail-modal')?.classList.add('hidden');
+    appState.selectedSurvey = null;
+}
+
+window.deleteSingleStudent = function(studentId) {
+    if (confirm(`Are you sure you want to delete submission ${studentId}?`)) {
+        appState.surveys = appState.surveys.filter(s => s.id !== studentId);
+        saveSurveys();
+        applyAdminFilters();
+        renderKPIs();
+        renderCharts();
+        showToast('Record deleted successfully', 'info');
+    }
+};
+
+function deleteCurrentStudent() {
+    if (appState.selectedSurvey) {
+        window.deleteSingleStudent(appState.selectedSurvey.id);
+        closeDetailModal();
+    }
+}
+
+function confirmClearAllData() {
+    if (confirm('WARNING: Are you sure you want to delete ALL survey records? This action cannot be undone.')) {
+        appState.surveys = [];
+        saveSurveys();
+        applyAdminFilters();
+        renderKPIs();
+        renderCharts();
+        showToast('All survey records cleared', 'info');
+    }
+}
+
+function addMoreSampleData() {
+    const randomDepts = ["Computer Science & Engineering", "Electronics & Communication", "Mechanical Engineering", "Civil Engineering", "Information Technology", "Business & Management"];
+    const randomYears = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Post-Graduate"];
+    const names = ["Kavya Nair", "Aditya Joshi", "Pooja Reddy", "Manish Sen", "Divya Rao", "Karthik Raja"];
+    
+    const newItems = names.map((name, idx) => {
+        const id = 'STU-' + Math.floor(100000 + Math.random() * 900000);
+        return {
+            id: id,
+            timestamp: new Date(Date.now() - (idx * 3600000 * 4)).toISOString(),
+            fullName: name,
+            rollNo: `STU${2400 + Math.floor(Math.random() * 500)}`,
+            email: `${name.toLowerCase().replace(' ', '.')}@example.edu`,
+            phone: `+91 98${Math.floor(10000000 + Math.random() * 90000000)}`,
+            gender: idx % 2 === 0 ? "Female" : "Male",
+            dob: "2004-06-15",
+            degree: "B.Tech",
+            department: randomDepts[Math.floor(Math.random() * randomDepts.length)],
+            year: randomYears[Math.floor(Math.random() * randomYears.length)],
+            semester: "Semester 4",
+            section: "A",
+            cgpa: (7.2 + Math.random() * 2.6).toFixed(2),
+            courseRating: Math.floor(3 + Math.random() * 3),
+            facilitiesRating: Math.floor(3 + Math.random() * 3),
+            interests: ["Full Stack Web Dev", "Artificial Intelligence / ML"],
+            placementAssistance: Math.random() > 0.3 ? "Yes" : "No",
+            extracurriculars: "Sports & Cultural Committee",
+            feedback: "Overall learning experience has been great!"
+        };
+    });
+
+    appState.surveys = [...newItems, ...appState.surveys];
+    saveSurveys();
+    applyAdminFilters();
+    renderKPIs();
+    renderCharts();
+    showToast(`Added ${newItems.length} demo records`, 'success');
+}
+
+// ==========================================
+// 8. EXPORT DATA (EXCEL / CSV)
+// ==========================================
+function exportToExcel() {
+    if (appState.surveys.length === 0) {
+        showToast('No survey data to export', 'warning');
+        return;
+    }
+
+    try {
+        const exportData = appState.surveys.map(s => ({
+            "Submission ID": s.id,
+            "Date & Time": new Date(s.timestamp).toLocaleString(),
+            "Full Name": s.fullName,
+            "Roll Number": s.rollNo,
+            "Email Address": s.email,
+            "Phone Number": s.phone,
+            "Gender": s.gender,
+            "Date of Birth": s.dob,
+            "Degree": s.degree,
+            "Department": s.department,
+            "Academic Year": s.year,
+            "Semester": s.semester,
+            "Section": s.section,
+            "CGPA": s.cgpa,
+            "Course Rating (1-5)": s.courseRating,
+            "Facilities Rating (1-5)": s.facilitiesRating,
+            "Career Interests": Array.isArray(s.interests) ? s.interests.join(", ") : s.interests,
+            "Placement Assistance": s.placementAssistance,
+            "Extracurriculars": s.extracurriculars,
+            "Student Feedback": s.feedback
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Student Surveys");
+
+        // Generate filename with date
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(workbook, `Student_Survey_Export_${dateStr}.xlsx`);
+        showToast('Excel report downloaded successfully!', 'success');
+
+    } catch (e) {
+        console.error('Excel export error:', e);
+        showToast('Failed to export Excel. Falling back to CSV.', 'error');
+        exportToCSV();
+    }
+}
+
+function exportToCSV() {
+    if (appState.surveys.length === 0) {
+        showToast('No survey data to export', 'warning');
+        return;
+    }
+
+    const headers = [
+        "Submission ID", "Timestamp", "Full Name", "Roll Number", "Email", "Phone",
+        "Gender", "DOB", "Degree", "Department", "Year", "Semester", "Section",
+        "CGPA", "Course Rating", "Facilities Rating", "Interests", "Placement Assistance",
+        "Extracurriculars", "Feedback"
+    ];
+
+    const rows = appState.surveys.map(s => [
+        `"${s.id || ''}"`,
+        `"${s.timestamp || ''}"`,
+        `"${(s.fullName || '').replace(/"/g, '""')}"`,
+        `"${(s.rollNo || '').replace(/"/g, '""')}"`,
+        `"${(s.email || '').replace(/"/g, '""')}"`,
+        `"${(s.phone || '').replace(/"/g, '""')}"`,
+        `"${s.gender || ''}"`,
+        `"${s.dob || ''}"`,
+        `"${s.degree || ''}"`,
+        `"${s.department || ''}"`,
+        `"${s.year || ''}"`,
+        `"${s.semester || ''}"`,
+        `"${s.section || ''}"`,
+        `"${s.cgpa || ''}"`,
+        `"${s.courseRating || ''}"`,
+        `"${s.facilitiesRating || ''}"`,
+        `"${(Array.isArray(s.interests) ? s.interests.join('; ') : s.interests || '').replace(/"/g, '""')}"`,
+        `"${s.placementAssistance || ''}"`,
+        `"${(s.extracurriculars || '').replace(/"/g, '""')}"`,
+        `"${(s.feedback || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Student_Surveys_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('CSV file downloaded successfully!', 'success');
+}
+
+// ==========================================
+// 9. SETTINGS & CLOUD CONFIGURATION
+// ==========================================
+function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (!modal) return;
+
+    document.getElementById('setting-admin-passcode').value = appState.settings.adminPasscode || 'admin123';
+    document.getElementById('setting-supabase-url').value = appState.settings.supabaseUrl || '';
+    document.getElementById('setting-supabase-key').value = appState.settings.supabaseAnonKey || '';
+    document.getElementById('setting-gsheet-url').value = appState.settings.googleSheetWebhookUrl || '';
+
+    modal.classList.remove('hidden');
+}
+
+function closeSettingsModal() {
+    document.getElementById('settings-modal')?.classList.add('hidden');
+}
+
+function handleSettingsSave(e) {
+    e.preventDefault();
+    appState.settings.adminPasscode = document.getElementById('setting-admin-passcode')?.value || 'admin123';
+    appState.settings.supabaseUrl = document.getElementById('setting-supabase-url')?.value.trim() || '';
+    appState.settings.supabaseAnonKey = document.getElementById('setting-supabase-key')?.value.trim() || '';
+    appState.settings.googleSheetWebhookUrl = document.getElementById('setting-gsheet-url')?.value.trim() || '';
+
+    saveSettings();
+    closeSettingsModal();
+    showToast('Settings saved successfully!', 'success');
+}
+
+async function testSupabaseConnection() {
+    const url = document.getElementById('setting-supabase-url')?.value.trim();
+    const key = document.getElementById('setting-supabase-key')?.value.trim();
+
+    if (!url || !key) {
+        showToast('Please enter both Supabase URL and Anon Key first', 'warning');
+        return;
+    }
+
+    const testBtn = document.getElementById('test-supabase-btn');
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Testing...';
+
+    try {
+        const res = await fetch(`${url.replace(/\/$/, '')}/rest/v1/student_surveys?limit=1`, {
+            headers: {
+                'apikey': key,
+                'Authorization': `Bearer ${key}`
+            }
+        });
+
+        if (res.ok) {
+            showToast('✅ Supabase connected successfully!', 'success');
+        } else {
+            showToast(`⚠️ Supabase returned HTTP ${res.status}. Check table name & RLS policies.`, 'warning');
+        }
+    } catch (e) {
+        showToast('❌ Could not reach Supabase endpoint. Check URL.', 'error');
+    } finally {
+        testBtn.innerHTML = '<i class="fas fa-plug mr-1"></i> Test Connection';
+    }
+}
+
+async function testGoogleSheetWebhook() {
+    const url = document.getElementById('setting-gsheet-url')?.value.trim();
+    if (!url) {
+        showToast('Please enter your Google Apps Script Webhook URL', 'warning');
+        return;
+    }
+
+    const testBtn = document.getElementById('test-gsheet-btn');
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Testing...';
+
+    try {
+        await fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: "TEST-PING",
+                fullName: "Test Ping from Admin Panel",
+                rollNo: "PING-001",
+                timestamp: new Date().toISOString()
+            })
+        });
+        showToast('✅ Ping sent to Google Apps Script webhook!', 'success');
+    } catch (e) {
+        showToast('❌ Error connecting to webhook URL', 'error');
+    } finally {
+        testBtn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i> Send Test Ping';
+    }
+}
+
+// ==========================================
+// 10. UTILITIES & NOTIFICATIONS
+// ==========================================
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    const typeIcons = {
+        success: '<i class="fas fa-check-circle text-emerald-500 text-lg"></i>',
+        error: '<i class="fas fa-times-circle text-red-500 text-lg"></i>',
+        warning: '<i class="fas fa-exclamation-triangle text-amber-500 text-lg"></i>',
+        info: '<i class="fas fa-info-circle text-indigo-500 text-lg"></i>'
+    };
+
+    toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm transform transition-all duration-300 translate-y-4 opacity-0 border-gray-200 dark:border-gray-700`;
+    toast.innerHTML = `
+        ${typeIcons[type] || typeIcons.info}
+        <span class="font-medium">${escapeHtml(message)}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+    });
+
+    // Auto dismiss after 3.5s
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+function escapeHtml(string) {
+    if (!string) return '';
+    return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+</script>
+</body>
+</html>
 
